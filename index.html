@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin | WhoIsBringing</title>
+    <link id="favicon" rel="icon" href="https://blobs.whoisbringing.com/favicon%20(1).png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background-color: #f7fafc;
+        }
+        .dark body {
+            background-color: #1a202c;
+        }
+        /* Stat diff badge */
+        .stat-value {
+            position: relative;
+            display: inline-block;
+        }
+        .stat-diff {
+            position: absolute;
+            top: -2px;
+            right: -8px;
+            transform: translateX(100%);
+            font-size: 0.75rem;
+            font-weight: 600;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 9999px;
+            white-space: nowrap;
+            animation: statDiffIn 0.3s ease-out forwards, statDiffOut 0.4s 4.2s ease-in forwards;
+            pointer-events: none;
+        }
+        .stat-diff.positive {
+            color: #059669;
+            background-color: #d1fae5;
+        }
+        .dark .stat-diff.positive {
+            color: #6ee7b7;
+            background-color: rgba(6, 78, 59, 0.5);
+        }
+        .stat-diff.negative {
+            color: #dc2626;
+            background-color: #fee2e2;
+        }
+        .dark .stat-diff.negative {
+            color: #fca5a5;
+            background-color: rgba(127, 29, 29, 0.5);
+        }
+        @keyframes statDiffIn {
+            from { opacity: 0; transform: translateX(100%) translateY(6px); }
+            to   { opacity: 1; transform: translateX(100%) translateY(0); }
+        }
+        @keyframes statDiffOut {
+            from { opacity: 1; }
+            to   { opacity: 0; }
+        }
+        .pagination-btn {
+            border: 1px solid #d1d5db;
+            color: #374151;
+            background-color: white;
+        }
+        .dark .pagination-btn {
+            border-color: #4a5568;
+            color: #e2e8f0;
+            background-color: #2d3748;
+        }
+        .pagination-btn:hover {
+            background-color: #f9fafb;
+        }
+        .dark .pagination-btn:hover {
+            background-color: #4a5568;
+        }
+        .pagination-btn.active {
+            background-color: #6366f1;
+            color: #ffffff;
+            border-color: #6366f1;
+        }
+        .pagination-btn:disabled {
+            background-color: #e5e7eb;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .dark .pagination-btn:disabled {
+            background-color: #4a5568;
+        }
+        .table-auto th {
+            font-weight: 600;
+        }
+        .sort-header {
+            cursor: default;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .sort-header .sort-icon {
+            font-size: 16px;
+            line-height: 1;
+            color: #6366f1;
+        }
+        .action-link {
+             color: #4338ca;
+        }
+        .dark .action-link {
+            color: #818cf8;
+        }
+        .action-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* ── Refresh Button Animations ── */
+        @keyframes spin-smooth {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes success-pop {
+            0%   { transform: scale(1); }
+            40%  { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake-error {
+            0%, 100% { transform: translateX(0); }
+            20%      { transform: translateX(-4px); }
+            40%      { transform: translateX(4px); }
+            60%      { transform: translateX(-3px); }
+            80%      { transform: translateX(3px); }
+        }
+
+        .refresh-btn { transition: all 0.3s cubic-bezier(.4,0,.2,1); position: relative; }
+        .refresh-btn:active:not(.is-loading) { transform: scale(0.92); }
+
+        .refresh-btn .refresh-icon       { transition: opacity 0.2s, transform 0.2s; }
+        .refresh-btn .refresh-icon-ok     { position: absolute; opacity: 0; transition: opacity 0.2s, transform 0.2s; }
+        .refresh-btn .refresh-icon-fail   { position: absolute; opacity: 0; transition: opacity 0.2s, transform 0.2s; }
+
+        .refresh-btn.is-loading .refresh-icon {
+            animation: spin-smooth 0.7s linear infinite;
+        }
+        .refresh-btn.is-loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .refresh-btn.is-success {
+            animation: success-pop 0.4s ease;
+            border-color: #22c55e !important;
+            background-color: #f0fdf4 !important;
+        }
+        .dark .refresh-btn.is-success {
+            background-color: rgba(34, 197, 94, 0.15) !important;
+        }
+        .refresh-btn.is-success .refresh-icon     { opacity: 0; transform: scale(0.5); }
+        .refresh-btn.is-success .refresh-icon-ok   { opacity: 1; transform: scale(1); }
+
+        .refresh-btn.is-error {
+            animation: shake-error 0.45s ease;
+            border-color: #ef4444 !important;
+            background-color: #fef2f2 !important;
+        }
+        .dark .refresh-btn.is-error {
+            background-color: rgba(239, 68, 68, 0.15) !important;
+        }
+        .refresh-btn.is-error .refresh-icon     { opacity: 0; transform: scale(0.5); }
+        .refresh-btn.is-error .refresh-icon-fail { opacity: 1; transform: scale(1); }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #4a5568; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #718096; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <header class="bg-white dark:bg-gray-800 shadow-sm relative">
+        <div class="container mx-auto px-4 md:px-8 flex justify-between items-center h-20">
+            <div class="flex items-center gap-3">
+                <img src="https://blobs.whoisbringing.com/favicon%20(1).png" alt="WhoIsBringing Logo" class="h-10 w-10" width="40" height="40" style="height:auto;">
+                <span class="text-xl font-bold text-gray-800 dark:text-gray-100 hidden sm:inline">WhoIsBringing</span>
+            </div>
+            <!-- Theme Toggle Button -->
+            <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#6366f1] focus:ring-offset-white dark:focus:ring-offset-gray-800 transition-all">
+                <svg id="theme-icon-light" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="theme-icon-dark" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="container mx-auto p-4 md:p-8">
+        <div class="text-center mb-8 relative">
+            <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+             <button id="refresh-btn" title="Refresh Data" class="refresh-btn fixed bottom-6 right-6 z-50 bg-white dark:bg-gray-700 h-14 w-14 flex items-center justify-center rounded-full shadow-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors md:absolute md:top-1/2 md:-mt-5 md:right-0 md:bottom-auto md:h-10 md:w-10 md:shadow-md">
+                <svg class="w-5 h-5 text-gray-600 dark:text-gray-300 refresh-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <svg class="w-5 h-5 text-green-500 refresh-icon-ok" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                <svg class="w-5 h-5 text-red-500 refresh-icon-fail" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+            </button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-gray-200 dark:border-gray-700 mb-8 gap-6 text-sm font-medium">
+            <button id="tab-overview" class="pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none">
+                <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">dashboard</span>
+                Overview
+            </button>
+            <button id="tab-reporting" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none">
+                <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">analytics</span>
+                Reporting & KPIs
+            </button>
+            <button id="tab-seo" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none">
+                <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">search</span>
+                SEO Centre
+            </button>
+        </div>
+
+        <div id="view-overview" class="space-y-8">
+            <!-- Stats Section -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h2 class="text-sm md:text-lg font-semibold text-gray-500 dark:text-gray-400">Total Events</h2>
+                    <p id="total-events" class="stat-value text-3xl md:text-4xl font-bold mt-2">-</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h2 class="text-sm md:text-lg font-semibold text-gray-500 dark:text-gray-400">Checklist Items</h2>
+                    <p id="total-items" class="stat-value text-3xl md:text-4xl font-bold mt-2">-</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h2 class="text-sm md:text-lg font-semibold text-gray-500 dark:text-gray-400">Registered Users</h2>
+                    <p id="total-registered" class="stat-value text-3xl md:text-4xl font-bold mt-2 text-indigo-600 dark:text-indigo-400">-</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                    <h2 class="text-sm md:text-lg font-semibold text-gray-500 dark:text-gray-400">Guest Users</h2>
+                    <p id="total-guests" class="stat-value text-3xl md:text-4xl font-bold mt-2">-</p>
+                </div>
+            </div>
+
+        <!-- Events Table -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                <h2 class="text-2xl font-bold">Events</h2>
+                <div class="relative">
+                    <input type="text" id="events-search" placeholder="Search by event name..." class="text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 pl-9 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:border-transparent transition-colors w-full sm:w-64">
+                    <span class="absolute left-2.5 top-2.5 text-gray-400 dark:text-gray-500 material-symbols-outlined" style="font-size: 18px; line-height: 1;">search</span>
+                    <button id="events-search-clear" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hidden cursor-pointer" title="Clear search">
+                        <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">close</span>
+                    </button>
+                </div>
+            </div>
+            <div id="events-content" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <div id="events-loading" class="text-center p-12"><p>Loading events...</p></div>
+                <div id="events-error" class="hidden text-center p-12 text-red-500"></div>
+                <div class="overflow-x-auto">
+                    <table id="events-table" class="hidden w-full text-sm text-left">
+                        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Created At</th>
+                                <th scope="col" class="px-6 py-3">Event Name</th>
+                                <th scope="col" class="px-6 py-3">Host</th>
+                                <th scope="col" class="px-6 py-3 text-center">Items</th>
+                                <th scope="col" class="px-6 py-3 text-center">Guests</th>
+                                <th scope="col" class="px-6 py-3">Event Link</th>
+                            </tr>
+                        </thead>
+                        <tbody id="events-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                    </table>
+                </div>
+                <div id="events-pagination" class="p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"></div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="mb-8">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+                <h2 class="text-2xl font-bold">Users</h2>
+                <div class="relative">
+                    <input type="text" id="users-search" placeholder="Search by email or name..." class="text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 pl-9 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:border-transparent transition-colors w-full sm:w-64">
+                    <span class="absolute left-2.5 top-2.5 text-gray-400 dark:text-gray-500 material-symbols-outlined" style="font-size: 18px; line-height: 1;">search</span>
+                    <button id="users-search-clear" class="absolute right-2 top-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hidden cursor-pointer" title="Clear search">
+                        <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">close</span>
+                    </button>
+                </div>
+            </div>
+            <div id="users-content" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <div id="users-loading" class="text-center p-12"><p>Loading users...</p></div>
+                <div id="users-error" class="hidden text-center p-12 text-red-500"></div>
+                <div class="overflow-x-auto">
+                    <table id="users-table" class="hidden w-full text-sm text-left">
+                        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Email</th>
+                                <th scope="col" class="px-6 py-3">Name</th>
+                                <th scope="col" class="px-6 py-3 text-center">Events Created</th>
+                                <th scope="col" class="px-6 py-3 text-center">Login Method</th>
+                                <th scope="col" class="px-6 py-3">
+                                    <span class="sort-header" title="Sorted by newest first">
+                                        Registration Date
+                                        <span class="sort-icon material-symbols-outlined">arrow_downward</span>
+                                    </span>
+                                </th>
+                                <th scope="col" class="px-6 py-3">Last Login</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                    </table>
+                </div>
+                <div id="users-pagination" class="p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"></div>
+            </div>
+        </div>
+    </div> <!-- Closes #view-overview -->
+
+        <!-- Reporting View -->
+        <div id="view-reporting" class="hidden space-y-8 pb-12">
+            <!-- Date Range Controls -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-xl shadow border border-gray-200 dark:border-gray-700 gap-4 mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#6366f1]">date_range</span>
+                    <span class="font-semibold text-gray-800 dark:text-gray-200">Date Range:</span>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Range presets selector -->
+                    <div class="relative inline-block text-left" id="range-dropdown-container">
+                        <button type="button" id="range-dropdown-button" class="flex items-center justify-between text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#6366f1] focus:border-transparent transition-all cursor-pointer w-52 gap-1">
+                            <span id="range-selected-label">Default (7d KPIs / 30d Graph)</span>
+                            <span id="range-dropdown-arrow" class="material-symbols-outlined transition-transform duration-200" style="font-size: 18px; line-height: 1;">expand_more</span>
+                        </button>
+                        
+                        <div id="range-dropdown-menu" class="hidden absolute right-0 mt-1.5 w-56 rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none z-30 transition-all transform origin-top-right scale-95 opacity-0 duration-100">
+                            <div class="py-1" role="menu" aria-orientation="vertical">
+                                <button type="button" class="range-option flex items-center justify-between w-full px-3 py-2 text-sm bg-indigo-600 text-white text-left transition-colors" data-value="default">
+                                    <span>Default (7d / 30d)</span>
+                                    <span class="range-checkmark material-symbols-outlined text-white" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                                <button type="button" class="range-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left transition-colors" data-value="7d">
+                                    <span>Last 7 Days</span>
+                                    <span class="range-checkmark material-symbols-outlined text-[#6366f1] hidden" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                                <button type="button" class="range-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left transition-colors" data-value="30d">
+                                    <span>Last 30 Days</span>
+                                    <span class="range-checkmark material-symbols-outlined text-[#6366f1] hidden" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                                <button type="button" class="range-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left transition-colors" data-value="90d">
+                                    <span>Last 90 Days</span>
+                                    <span class="range-checkmark material-symbols-outlined text-[#6366f1] hidden" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                                <button type="button" class="range-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left transition-colors" data-value="custom">
+                                    <span>Custom Range</span>
+                                    <span class="range-checkmark material-symbols-outlined text-[#6366f1] hidden" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Inputs (hidden by default) -->
+                    <div id="custom-range-inputs" class="hidden flex items-center gap-2">
+                        <input type="date" id="reporting-start-date" class="text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#6366f1]">
+                        <span class="text-gray-500 dark:text-gray-400 text-sm">to</span>
+                        <input type="date" id="reporting-end-date" class="text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#6366f1]">
+                        <button type="button" id="apply-custom-range" class="px-3 py-1.5 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold rounded-lg text-sm transition-colors cursor-pointer">Apply</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI Growth Summary Row -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Events KPI Card -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-gray-500 dark:text-gray-400">
+                            <span class="text-sm font-semibold uppercase tracking-wider">Events Created</span>
+                            <span class="material-symbols-outlined" style="font-size: 24px;">celebration</span>
+                        </div>
+                        <div class="mt-4 flex items-baseline gap-2">
+                            <span id="kpi-events-count" class="text-3xl font-bold">-</span>
+                            <span class="kpi-duration-label text-xs text-gray-400 dark:text-gray-500">last 7 days</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-sm">
+                        <span class="text-gray-500 dark:text-gray-400">vs prev <span class="kpi-duration-label">7 days</span> (<span id="kpi-events-prev">-</span>)</span>
+                        <span id="kpi-events-growth-badge" class="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                            <span id="kpi-events-growth-icon" class="material-symbols-outlined text-[14px]"></span>
+                            <span id="kpi-events-growth-pct">-</span>%
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Items KPI Card -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-gray-500 dark:text-gray-400">
+                            <span class="text-sm font-semibold uppercase tracking-wider">Items Added</span>
+                            <span class="material-symbols-outlined" style="font-size: 24px;">checklist</span>
+                        </div>
+                        <div class="mt-4 flex items-baseline gap-2">
+                            <span id="kpi-items-count" class="text-3xl font-bold">-</span>
+                            <span class="kpi-duration-label text-xs text-gray-400 dark:text-gray-500">last 7 days</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-sm">
+                        <span class="text-gray-500 dark:text-gray-400">vs prev <span class="kpi-duration-label">7 days</span> (<span id="kpi-items-prev">-</span>)</span>
+                        <span id="kpi-items-growth-badge" class="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                            <span id="kpi-items-growth-icon" class="material-symbols-outlined text-[14px]"></span>
+                            <span id="kpi-items-growth-pct">-</span>%
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Users KPI Card -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between text-gray-500 dark:text-gray-400">
+                            <span class="text-sm font-semibold uppercase tracking-wider">New Users</span>
+                            <span class="material-symbols-outlined" style="font-size: 24px;">group_add</span>
+                        </div>
+                        <div class="mt-4 flex items-baseline gap-2">
+                            <span id="kpi-users-count" class="text-3xl font-bold">-</span>
+                            <span class="kpi-duration-label text-xs text-gray-400 dark:text-gray-500">last 7 days</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-sm">
+                        <span class="text-gray-500 dark:text-gray-400">vs prev <span class="kpi-duration-label">7 days</span> (<span id="kpi-users-prev">-</span>)</span>
+                        <span id="kpi-users-growth-badge" class="inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-semibold">
+                            <span id="kpi-users-growth-icon" class="material-symbols-outlined text-[14px]"></span>
+                            <span id="kpi-users-growth-pct">-</span>%
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Events Created Chart -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Events Created (<span class="chart-duration-label">Last 30 Days</span>)</h3>
+                    <div class="relative h-[280px] w-full">
+                        <canvas id="chart-events"></canvas>
+                    </div>
+                </div>
+
+                <!-- Items Added Chart -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">Items Added (<span class="chart-duration-label">Last 30 Days</span>)</h3>
+                    <div class="relative h-[280px] w-full">
+                        <canvas id="chart-items"></canvas>
+                    </div>
+                </div>
+
+                <!-- New Users Chart -->
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700 lg:col-span-2">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800 dark:text-gray-200">New Users Registered (<span class="chart-duration-label">Last 30 Days</span>)</h3>
+                    <div class="relative h-[280px] w-full">
+                        <canvas id="chart-users"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEO Centre View -->
+        <div id="view-seo" class="hidden space-y-8 pb-12">
+            <!-- Header section with Trigger Pipeline button -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700 gap-4 mb-6">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#6366f1]">search</span>
+                        Automated SEO Content Generation
+                    </h2>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xl">
+                        Pulls queries from Google Search Console, identifies striking-distance keywords, writes optimised articles with Gemini AI, stores them in D1, and submits to the Google Indexing API.
+                    </p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="run-seo-btn" class="bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 px-5 rounded-lg transition-all shadow-md flex items-center justify-center gap-2 text-sm cursor-pointer whitespace-nowrap">
+                        <span id="run-seo-spinner" class="hidden animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                        <span id="run-seo-text">Trigger SEO Pipeline</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pipeline Running State / Result Notification -->
+            <div id="seo-status-container" class="hidden"></div>
+
+            <!-- Published SEO Articles Table -->
+            <div>
+                <h3 class="text-2xl font-bold mb-4">Generated Articles History</h3>
+                <div id="seo-content" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                    <div id="seo-loading" class="text-center p-12"><p>Loading articles...</p></div>
+                    <div id="seo-error" class="hidden text-center p-12 text-red-500"></div>
+                    <div class="overflow-x-auto">
+                        <table id="seo-table" class="hidden w-full text-sm text-left">
+                            <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">Published At</th>
+                                    <th scope="col" class="px-6 py-3">Target Keyword</th>
+                                    <th scope="col" class="px-6 py-3">Title</th>
+                                    <th scope="col" class="px-6 py-3">Category</th>
+                                    <th scope="col" class="px-6 py-3 text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="seo-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_BASE = 'https://api.whoisbringing.com';
+        const ADMIN_AUTH = 'WiB@dm1n$ecr3t!';
+        const PER_PAGE = 10;
+
+        // --- UI Elements ---
+        const totalEventsEl = document.getElementById('total-events');
+        const totalItemsEl = document.getElementById('total-items');
+        const totalRegisteredEl = document.getElementById('total-registered');
+        const totalGuestsEl = document.getElementById('total-guests');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeIconLight = document.getElementById('theme-icon-light');
+        const themeIconDark = document.getElementById('theme-icon-dark');
+        const refreshBtn = document.getElementById('refresh-btn');
+
+        // SEO Centre UI Elements
+        const tabSeo = document.getElementById('tab-seo');
+        const viewSeo = document.getElementById('view-seo');
+        const runSeoBtn = document.getElementById('run-seo-btn');
+        const runSeoSpinner = document.getElementById('run-seo-spinner');
+        const runSeoText = document.getElementById('run-seo-text');
+        const seoStatusContainer = document.getElementById('seo-status-container');
+        const seoLoading = document.getElementById('seo-loading');
+        const seoError = document.getElementById('seo-error');
+        const seoTable = document.getElementById('seo-table');
+        const seoBody = document.getElementById('seo-body');
+
+        let refreshState = 'idle';
+
+        const setRefreshState = (state) => {
+            refreshState = state;
+            refreshBtn.classList.remove('is-loading', 'is-success', 'is-error');
+            if (state === 'loading') refreshBtn.classList.add('is-loading');
+            else if (state === 'success') {
+                refreshBtn.classList.add('is-success');
+                setTimeout(() => { if (refreshState === 'success') setRefreshState('idle'); }, 1400);
+            } else if (state === 'error') {
+                refreshBtn.classList.add('is-error');
+                setTimeout(() => { if (refreshState === 'error') setRefreshState('idle'); }, 1800);
+            }
+        };
+
+        const eventsLoading = document.getElementById('events-loading');
+        const eventsError = document.getElementById('events-error');
+        const eventsTable = document.getElementById('events-table');
+        const eventsBody = document.getElementById('events-body');
+        const eventsPagination = document.getElementById('events-pagination');
+
+        const usersLoading = document.getElementById('users-loading');
+        const usersError = document.getElementById('users-error');
+        const usersTable = document.getElementById('users-table');
+        const usersBody = document.getElementById('users-body');
+        const usersPagination = document.getElementById('users-pagination');
+
+        // --- Date Range Presets Dropdown ---
+        const rangeDropdownButton = document.getElementById('range-dropdown-button');
+        const rangeDropdownArrow = document.getElementById('range-dropdown-arrow');
+        const rangeDropdownMenu = document.getElementById('range-dropdown-menu');
+        const rangeDropdownContainer = document.getElementById('range-dropdown-container');
+        const rangeSelectedLabel = document.getElementById('range-selected-label');
+        const rangeOptions = document.querySelectorAll('.range-option');
+        const customRangeInputs = document.getElementById('custom-range-inputs');
+        
+        const reportingStartDate = document.getElementById('reporting-start-date');
+        const reportingEndDate = document.getElementById('reporting-end-date');
+        const applyCustomRangeBtn = document.getElementById('apply-custom-range');
+
+        let isRangeDropdownOpen = false;
+        let selectedRange = 'default';
+        let customStart = '';
+        let customEnd = '';
+
+        const initDateInputs = () => {
+            const today = new Date();
+            const thirtyAgo = new Date();
+            thirtyAgo.setDate(today.getDate() - 29);
+            
+            reportingStartDate.value = thirtyAgo.toISOString().split('T')[0];
+            reportingEndDate.value = today.toISOString().split('T')[0];
+            customStart = reportingStartDate.value;
+            customEnd = reportingEndDate.value;
+        };
+
+        const openRangeDropdown = () => {
+            isRangeDropdownOpen = true;
+            rangeDropdownMenu.classList.remove('hidden');
+            setTimeout(() => {
+                rangeDropdownMenu.classList.remove('opacity-0', 'scale-95');
+                rangeDropdownMenu.classList.add('opacity-100', 'scale-100');
+            }, 10);
+            rangeDropdownArrow.classList.add('rotate-180');
+            rangeDropdownButton.classList.add('ring-2', 'ring-[#6366f1]', 'border-transparent');
+            rangeDropdownButton.classList.remove('border-gray-300', 'dark:border-gray-600');
+        };
+
+        const closeRangeDropdown = () => {
+            isRangeDropdownOpen = false;
+            rangeDropdownMenu.classList.remove('opacity-100', 'scale-100');
+            rangeDropdownMenu.classList.add('opacity-0', 'scale-95');
+            rangeDropdownArrow.classList.remove('rotate-180');
+            rangeDropdownButton.classList.remove('ring-2', 'ring-[#6366f1]', 'border-transparent');
+            rangeDropdownButton.classList.add('border-gray-300', 'dark:border-gray-600');
+            
+            setTimeout(() => {
+                if (!isRangeDropdownOpen) {
+                    rangeDropdownMenu.classList.add('hidden');
+                }
+            }, 100);
+        };
+
+        rangeDropdownButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isRangeDropdownOpen) closeRangeDropdown();
+            else openRangeDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (isRangeDropdownOpen && !rangeDropdownContainer.contains(e.target)) {
+                closeRangeDropdown();
+            }
+        });
+
+        rangeOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = option.getAttribute('data-value');
+                const label = option.querySelector('span:not(.range-checkmark)').textContent;
+
+                selectedRange = value;
+                rangeSelectedLabel.textContent = label;
+
+                rangeOptions.forEach(opt => {
+                    const checkmark = opt.querySelector('.range-checkmark');
+                    if (opt === option) {
+                        checkmark.classList.remove('hidden');
+                        checkmark.classList.remove('text-[#6366f1]');
+                        checkmark.classList.add('text-white');
+                        opt.classList.add('bg-indigo-600', 'text-white');
+                        opt.classList.remove('text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                    } else {
+                        checkmark.classList.add('hidden');
+                        checkmark.classList.remove('text-white');
+                        checkmark.classList.add('text-[#6366f1]');
+                        opt.classList.remove('bg-indigo-600', 'text-white');
+                        opt.classList.add('text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                    }
+                });
+
+                if (value === 'custom') {
+                    customRangeInputs.classList.remove('hidden');
+                } else {
+                    customRangeInputs.classList.add('hidden');
+                    fetchAndRenderReporting();
+                }
+                closeRangeDropdown();
+            });
+        });
+
+        applyCustomRangeBtn.addEventListener('click', () => {
+            const startVal = reportingStartDate.value;
+            const endVal = reportingEndDate.value;
+            if (!startVal || !endVal) {
+                showToast('Please select both start and end dates.', 'error');
+                return;
+            }
+            if (new Date(startVal) > new Date(endVal)) {
+                showToast('Start date cannot be after end date.', 'error');
+                return;
+            }
+            customStart = startVal;
+            customEnd = endVal;
+            fetchAndRenderReporting();
+        });
+
+        // --- Navigation Tabs & Views ---
+        const tabOverview = document.getElementById('tab-overview');
+        const tabReporting = document.getElementById('tab-reporting');
+        const viewOverview = document.getElementById('view-overview');
+        const viewReporting = document.getElementById('view-reporting');
+
+        let activeTab = 'overview';
+
+        const switchTab = (tabName, updateHash = true) => {
+            activeTab = tabName;
+            if (updateHash) {
+                window.location.hash = tabName;
+            }
+            if (tabName === 'overview') {
+                tabOverview.className = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none";
+                tabReporting.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+                tabSeo.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+                viewOverview.classList.remove('hidden');
+                viewReporting.classList.add('hidden');
+                viewSeo.classList.add('hidden');
+            } else if (tabName === 'reporting') {
+                tabReporting.className = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none";
+                tabOverview.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+                tabSeo.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+                viewOverview.classList.add('hidden');
+                viewReporting.classList.remove('hidden');
+                viewSeo.classList.add('hidden');
+                fetchAndRenderReporting();
+            } else if (tabName === 'seo') {
+                tabSeo.className = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none";
+                tabOverview.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+                tabReporting.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+                viewOverview.classList.add('hidden');
+                viewReporting.classList.add('hidden');
+                viewSeo.classList.remove('hidden');
+                fetchAndRenderSeoHistory();
+            }
+        };
+
+        tabOverview.addEventListener('click', () => switchTab('overview'));
+        tabReporting.addEventListener('click', () => switchTab('reporting'));
+        tabSeo.addEventListener('click', () => switchTab('seo'));
+
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.substring(1);
+            if (['overview', 'reporting', 'seo'].includes(hash)) {
+                switchTab(hash, false);
+            }
+        });
+
+        // --- Chart.js Reporting Controller ---
+        let chartEventsObj = null;
+        let chartItemsObj = null;
+        let chartUsersObj = null;
+
+        const getChartThemeColors = () => {
+            const isDark = document.documentElement.classList.contains('dark');
+            return {
+                gridColor: isDark ? 'rgba(74, 85, 104, 0.3)' : 'rgba(229, 231, 235, 0.6)',
+                textColor: isDark ? '#e2e8f0' : '#4b5563',
+                tooltipBg: isDark ? '#1f2937' : '#ffffff',
+                tooltipBorder: isDark ? '#4a5568' : '#e5e7eb',
+                tooltipText: isDark ? '#f3f4f6' : '#1f2937'
+            };
+        };
+
+        const getDateRangeLabels = (startStr, endStr) => {
+            const labels = [];
+            const start = new Date(startStr + 'T00:00:00');
+            const end = new Date(endStr + 'T00:00:00');
+            const current = new Date(start);
+            
+            while (current <= end) {
+                labels.push(current.toISOString().split('T')[0]);
+                current.setDate(current.getDate() + 1);
+            }
+            return labels;
+        };
+
+        const alignTrendData = (trendArray, dates) => {
+            const dataMap = new Map((trendArray || []).map(item => [item.date, item.count]));
+            return dates.map(date => dataMap.get(date) || 0);
+        };
+
+        const renderKPIs = (summary) => {
+            const durationLabels = document.querySelectorAll('.kpi-duration-label');
+            let labelText = '7 days';
+            if (selectedRange === '30d') labelText = '30 days';
+            else if (selectedRange === '90d') labelText = '90 days';
+            else if (selectedRange === 'custom') {
+                const start = new Date(customStart + 'T00:00:00');
+                const end = new Date(customEnd + 'T00:00:00');
+                const diffDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+                labelText = diffDays + ' days';
+            }
+            durationLabels.forEach(lbl => {
+                if (lbl.tagName === 'SPAN' && lbl.textContent.startsWith('last')) {
+                    lbl.textContent = 'last ' + labelText;
+                } else {
+                    lbl.textContent = labelText;
+                }
+            });
+
+            const chartLabels = document.querySelectorAll('.chart-duration-label');
+            let chartLabelText = 'Last 30 Days';
+            if (selectedRange === '7d') chartLabelText = 'Last 7 Days';
+            else if (selectedRange === '30d') chartLabelText = 'Last 30 Days';
+            else if (selectedRange === '90d') chartLabelText = 'Last 90 Days';
+            else if (selectedRange === 'custom') chartLabelText = 'Selected Period';
+            chartLabels.forEach(lbl => lbl.textContent = chartLabelText);
+
+            const updateCard = (key, data) => {
+                const countEl = document.getElementById(`kpi-${key}-count`);
+                const prevEl = document.getElementById(`kpi-${key}-prev`);
+                const pctEl = document.getElementById(`kpi-${key}-growth-pct`);
+                const iconEl = document.getElementById(`kpi-${key}-growth-icon`);
+                const badgeEl = document.getElementById(`kpi-${key}-growth-badge`);
+
+                countEl.textContent = data.last7;
+                prevEl.textContent = data.prev7;
+                pctEl.textContent = (data.growth >= 0 ? '+' : '') + data.growth;
+
+                badgeEl.className = "inline-flex items-center gap-0.5 px-2.5 py-0.5 rounded-full text-xs font-semibold";
+
+                const val = parseFloat(data.growth);
+                if (val > 0) {
+                    badgeEl.classList.add("bg-emerald-100", "text-emerald-800", "dark:bg-emerald-900/30", "dark:text-emerald-300");
+                    iconEl.textContent = "arrow_upward";
+                } else if (val < 0) {
+                    badgeEl.classList.add("bg-red-100", "text-red-800", "dark:bg-red-900/30", "dark:text-red-300");
+                    iconEl.textContent = "arrow_downward";
+                } else {
+                    badgeEl.classList.add("bg-gray-100", "text-gray-800", "dark:bg-gray-700/50", "dark:text-gray-300");
+                    iconEl.textContent = "trending_flat";
+                }
+            };
+
+            if (summary) {
+                updateCard('events', summary.events);
+                updateCard('items', summary.items);
+                updateCard('users', summary.users);
+            }
+        };
+
+        const renderCharts = (trends, chartStart, chartEnd) => {
+            const dates = getDateRangeLabels(chartStart, chartEnd);
+            const theme = getChartThemeColors();
+
+            const eventsData = alignTrendData(trends.events, dates);
+            const itemsData = alignTrendData(trends.items, dates);
+            const usersData = alignTrendData(trends.users, dates);
+
+            const chartOptions = (title, color) => ({
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: theme.tooltipBg,
+                        titleColor: theme.tooltipText,
+                        bodyColor: theme.tooltipText,
+                        borderColor: theme.tooltipBorder,
+                        borderWidth: 1,
+                        displayColors: false,
+                        padding: 10
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: theme.textColor,
+                            font: { family: 'Poppins', size: 10 },
+                            maxTicksLimit: 7
+                        }
+                    },
+                    y: {
+                        grid: { color: theme.gridColor },
+                        ticks: {
+                            color: theme.textColor,
+                            font: { family: 'Poppins', size: 10 },
+                            stepSize: 1
+                        },
+                        beginAtZero: true
+                    }
+                }
+            });
+
+            // Render Events Chart
+            if (chartEventsObj) chartEventsObj.destroy();
+            const ctxEvents = document.getElementById('chart-events').getContext('2d');
+            chartEventsObj = new Chart(ctxEvents, {
+                type: 'line',
+                data: {
+                    labels: dates.map(d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                    datasets: [{
+                        data: eventsData,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: chartOptions('Events Created', '#6366f1')
+            });
+
+            // Render Items Chart
+            if (chartItemsObj) chartItemsObj.destroy();
+            const ctxItems = document.getElementById('chart-items').getContext('2d');
+            chartItemsObj = new Chart(ctxItems, {
+                type: 'line',
+                data: {
+                    labels: dates.map(d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                    datasets: [{
+                        data: itemsData,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.05)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: chartOptions('Items Added', '#3b82f6')
+            });
+
+            // Render Users Chart
+            if (chartUsersObj) chartUsersObj.destroy();
+            const ctxUsers = document.getElementById('chart-users').getContext('2d');
+            chartUsersObj = new Chart(ctxUsers, {
+                type: 'line',
+                data: {
+                    labels: dates.map(d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                    datasets: [{
+                        data: usersData,
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.05)',
+                        fill: true,
+                        tension: 0.3,
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: chartOptions('New Users', '#8b5cf6')
+            });
+        };
+
+        const getReportingDateParams = () => {
+            const today = new Date();
+            const formatStr = (d) => d.toISOString().split('T')[0];
+            const params = {};
+
+            if (selectedRange === 'default') {
+                const thirtyAgo = new Date();
+                thirtyAgo.setDate(today.getDate() - 29);
+                const sevenAgo = new Date();
+                sevenAgo.setDate(today.getDate() - 6);
+                
+                params.chart_start = formatStr(thirtyAgo);
+                params.chart_end = formatStr(today);
+                params.kpi_start = formatStr(sevenAgo);
+                params.kpi_end = formatStr(today);
+            } else if (selectedRange === '7d') {
+                const sevenAgo = new Date();
+                sevenAgo.setDate(today.getDate() - 6);
+                
+                params.chart_start = formatStr(sevenAgo);
+                params.chart_end = formatStr(today);
+                params.kpi_start = formatStr(sevenAgo);
+                params.kpi_end = formatStr(today);
+            } else if (selectedRange === '30d') {
+                const thirtyAgo = new Date();
+                thirtyAgo.setDate(today.getDate() - 29);
+                
+                params.chart_start = formatStr(thirtyAgo);
+                params.chart_end = formatStr(today);
+                params.kpi_start = formatStr(thirtyAgo);
+                params.kpi_end = formatStr(today);
+            } else if (selectedRange === '90d') {
+                const ninetyAgo = new Date();
+                ninetyAgo.setDate(today.getDate() - 89);
+                
+                params.chart_start = formatStr(ninetyAgo);
+                params.chart_end = formatStr(today);
+                params.kpi_start = formatStr(ninetyAgo);
+                params.kpi_end = formatStr(today);
+            } else if (selectedRange === 'custom') {
+                params.chart_start = customStart;
+                params.chart_end = customEnd;
+                params.kpi_start = customStart;
+                params.kpi_end = customEnd;
+            }
+            return params;
+        };
+
+        const fetchAndRenderReporting = async () => {
+            const params = getReportingDateParams();
+            const data = await fetchData('reporting', 1, params);
+            if (data && !data.error) {
+                renderKPIs(data.summary);
+                renderCharts(data.trends, params.chart_start, params.chart_end);
+            }
+        };
+
+        const updateChartsTheme = () => {
+            const theme = getChartThemeColors();
+            [chartEventsObj, chartItemsObj, chartUsersObj].forEach(chart => {
+                if (chart) {
+                    chart.options.scales.x.ticks.color = theme.textColor;
+                    chart.options.scales.y.ticks.color = theme.textColor;
+                    chart.options.scales.y.grid.color = theme.gridColor;
+                    chart.options.plugins.tooltip.backgroundColor = theme.tooltipBg;
+                    chart.options.plugins.tooltip.titleColor = theme.tooltipText;
+                    chart.options.plugins.tooltip.bodyColor = theme.tooltipText;
+                    chart.options.plugins.tooltip.borderColor = theme.tooltipBorder;
+                    chart.update();
+                }
+            });
+        };
+
+
+        // --- Theme Toggle Logic ---
+        const initTheme = () => {
+            if (localStorage.getItem('wib-theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeIconLight.classList.remove('hidden');
+                themeIconDark.classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeIconDark.classList.remove('hidden');
+                themeIconLight.classList.add('hidden');
+            }
+        };
+
+        themeToggleBtn.addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            if (isDark) {
+                localStorage.setItem('wib-theme', 'dark');
+                themeIconLight.classList.remove('hidden');
+                themeIconDark.classList.add('hidden');
+            } else {
+                localStorage.setItem('wib-theme', 'light');
+                themeIconDark.classList.remove('hidden');
+                themeIconLight.classList.add('hidden');
+            }
+            updateChartsTheme();
+        });
+
+        // --- Date Parsing Helper ---
+        const formatAdminDate = (dateVal) => {
+            if (!dateVal) return null;
+
+            if (typeof dateVal === 'number' || (!isNaN(dateVal) && !isNaN(parseFloat(dateVal)) && String(dateVal).length <= 11)) {
+                const num = Number(dateVal);
+                const dateObj = new Date(num < 10000000000 ? num * 1000 : num);
+                return isNaN(dateObj) ? 'N/A' : dateObj.toLocaleString('en-US');
+            }
+
+            const dateStr = String(dateVal);
+            let dateObj;
+            if (dateStr.includes(' ') && !dateStr.includes('T')) {
+                const validIsoString = dateStr.replace(' ', 'T') + 'Z';
+                dateObj = new Date(validIsoString);
+            } else {
+                dateObj = new Date(dateStr);
+            }
+
+            return isNaN(dateObj) ? 'N/A' : dateObj.toLocaleString('en-US');
+        };
+
+        // --- Generic Fetch Function ---
+        const fetchData = async (endpoint, page = 1, extraParams = {}) => {
+            const url = new URL(`${API_BASE}/api/admin/${endpoint}`);
+            url.searchParams.append('page', page);
+            url.searchParams.append('limit', extraParams._limit || PER_PAGE);
+            Object.entries(extraParams).forEach(([key, value]) => {
+                if (key !== '_limit' && value !== '' && value !== undefined) {
+                    url.searchParams.append(key, value);
+                }
+            });
+
+            try {
+                const response = await fetch(url.toString(), {
+                    headers: { 'X-Admin-Auth': ADMIN_AUTH }
+                });
+                if (response.status === 401) {
+                    throw new Error('Authentication failed. Check your admin secret key.');
+                }
+                if (!response.ok) {
+                    throw new Error(`API request failed: ${response.statusText} (${response.status})`);
+                }
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'API returned an error.');
+                }
+                return data;
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                return { error: error.message };
+            }
+        };
+
+        // Fetch without admin auth (for public endpoints)
+        const fetchPublic = async (path) => {
+            try {
+                const response = await fetch(`${API_BASE}${path}`);
+                if (!response.ok) throw new Error(`API request failed: ${response.statusText}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error(`Error fetching ${path}:`, error);
+                return { error: error.message };
+            }
+        };
+
+        // --- Render Functions ---
+        const renderPagination = (container, paginationData, fetchCallback) => {
+            const { page, totalItems, totalPages } = paginationData;
+            container.innerHTML = '';
+            
+            if (!totalItems || totalItems === 0) {
+                return;
+            }
+
+            const pageInfo = document.createElement('div');
+            pageInfo.className = 'text-sm text-gray-700 dark:text-gray-400';
+            
+            const limit = paginationData.limit || PER_PAGE;
+            const startItem = (page - 1) * limit + 1;
+            const endItem = Math.min(page * limit, totalItems);
+            pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} results`;
+            container.appendChild(pageInfo);
+
+            if (totalPages <= 1) return;
+
+            const pageButtons = document.createElement('div');
+            pageButtons.className = 'flex items-center gap-2';
+
+            const createButton = (text, pageNum, isDisabled = false, isActive = false) => {
+                const button = document.createElement('button');
+                button.innerHTML = text;
+                button.className = 'pagination-btn px-3 py-1 rounded-md text-sm';
+                if (isActive) button.classList.add('active');
+                button.disabled = isDisabled;
+                button.onclick = () => fetchCallback(pageNum);
+                return button;
+            };
+
+            pageButtons.appendChild(createButton('&laquo;', 1, page === 1));
+            pageButtons.appendChild(createButton('&lsaquo;', page - 1, page === 1));
+            pageButtons.appendChild(createButton('&rsaquo;', page + 1, page === totalPages));
+            pageButtons.appendChild(createButton('&raquo;', totalPages, page === totalPages));
+
+            container.appendChild(pageButtons);
+        };
+
+        // --- Stat Diff Badge System ---
+        const previousStats = { totalEvents: null, totalItems: null, registered: null, guests: null };
+
+        const showStatDiff = (element, oldVal, newVal) => {
+            const existing = element.querySelector('.stat-diff');
+            if (existing) existing.remove();
+
+            if (oldVal === null || oldVal === undefined) return;
+            const diff = newVal - oldVal;
+            if (diff === 0) return;
+
+            const badge = document.createElement('span');
+            badge.className = `stat-diff ${diff > 0 ? 'positive' : 'negative'}`;
+            badge.textContent = diff > 0 ? `+${diff}` : `${diff}`;
+            element.appendChild(badge);
+
+            setTimeout(() => badge.remove(), 5000);
+        };
+
+        const fetchAndRenderStats = async () => {
+            const oldEvents = previousStats.totalEvents;
+            const oldItems = previousStats.totalItems;
+            const oldRegistered = previousStats.registered;
+            const oldGuests = previousStats.guests;
+
+            totalEventsEl.textContent = '...';
+            totalItemsEl.textContent = '...';
+            totalRegisteredEl.textContent = '...';
+            totalGuestsEl.textContent = '...';
+            const data = await fetchData('stats');
+            if (data && !data.error) {
+                const s = data.stats;
+                const newEvents = s.totalEvents;
+                const newItems = s.totalItems;
+                const newRegistered = s.registeredUsers;
+                const newGuests = s.guestUsers;
+
+                totalEventsEl.textContent = newEvents;
+                totalItemsEl.textContent = newItems;
+                totalRegisteredEl.textContent = newRegistered;
+                totalGuestsEl.textContent = newGuests;
+
+                showStatDiff(totalEventsEl, oldEvents, newEvents);
+                showStatDiff(totalItemsEl, oldItems, newItems);
+                showStatDiff(totalRegisteredEl, oldRegistered, newRegistered);
+                showStatDiff(totalGuestsEl, oldGuests, newGuests);
+
+                previousStats.totalEvents = newEvents;
+                previousStats.totalItems = newItems;
+                previousStats.registered = newRegistered;
+                previousStats.guests = newGuests;
+            } else {
+                totalEventsEl.textContent = 'Error';
+                totalItemsEl.textContent = 'Error';
+                totalRegisteredEl.textContent = 'Error';
+                totalGuestsEl.textContent = 'Error';
+            }
+        };
+
+        const fetchAndRenderEvents = async (page = 1) => {
+            eventsLoading.style.display = 'block';
+            eventsTable.style.display = 'none';
+            eventsError.style.display = 'none';
+
+            const params = {};
+            const eventsSearchValue = document.getElementById('events-search').value.trim();
+            if (eventsSearchValue !== '') {
+                params.search = eventsSearchValue;
+            }
+
+            const data = await fetchData('events', page, params);
+
+            eventsLoading.style.display = 'none';
+            if (data && !data.error) {
+                eventsTable.style.display = 'table';
+                eventsBody.innerHTML = '';
+                 if (data.events.length === 0) {
+                    const searchActive = document.getElementById('events-search').value.trim() !== '';
+                    eventsBody.innerHTML = `<tr><td colspan="6" class="text-center p-8">${searchActive ? 'No events matching your search.' : 'No events created yet.'}</td></tr>`;
+                } else {
+                    data.events.forEach(event => {
+                        const row = document.createElement('tr');
+                        const createdDate = formatAdminDate(event.created_at);
+                        const eventLink = `https://whoisbringing.com/event/${event.share_id || event.id}`;
+                        const hostName = event.host_name || event.host_email || 'Anonymous';
+
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono text-xs">${createdDate || 'N/A'}</td>
+                            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">${escapeHtml(event.event_name || event.title || 'Untitled')}</td>
+                            <td class="px-6 py-4 text-gray-500 dark:text-gray-400">${escapeHtml(hostName)}</td>
+                            <td class="px-6 py-4 text-center">${event.item_count ?? 0}</td>
+                            <td class="px-6 py-4 text-center">${event.guest_count ?? 0}</td>
+                            <td class="px-6 py-4"><a href="${eventLink}" target="_blank" class="action-link flex items-center gap-1">View Event <span class="material-symbols-outlined" style="font-size: 14px;">open_in_new</span></a></td>
+                        `;
+                        eventsBody.appendChild(row);
+                    });
+                }
+                renderPagination(eventsPagination, data.pagination, fetchAndRenderEvents);
+            } else {
+                eventsError.textContent = data.error || 'Failed to load events.';
+                eventsError.style.display = 'block';
+            }
+        };
+
+        // --- Users Section ---
+        const fetchAndRenderUsers = async (page = 1) => {
+            usersLoading.style.display = 'block';
+            usersTable.style.display = 'none';
+            usersError.style.display = 'none';
+
+            const params = {};
+            const searchValue = document.getElementById('users-search').value.trim();
+            if (searchValue !== '') {
+                params.search = searchValue;
+            }
+
+            const data = await fetchData('users', page, params);
+
+            usersLoading.style.display = 'none';
+            if (data && !data.error) {
+                usersTable.style.display = 'table';
+                usersBody.innerHTML = '';
+
+                if (data.users.length === 0) {
+                    usersBody.innerHTML = `<tr><td colspan="6" class="text-center p-8">No users found.</td></tr>`;
+                } else {
+                    data.users.forEach(user => {
+                        const row = document.createElement('tr');
+                        
+                        const loginMethod = user.login_method || 'OTP';
+                        const loginBadgeClasses = loginMethod.toLowerCase().includes('google')
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300';
+
+                        const registrationDisplay = formatAdminDate(user.created_at) || 'N/A';
+                        const lastLoginDisplay = formatAdminDate(user.last_login_at) || 'Never';
+
+                        const eventCountDisplay = user.event_count > 0 
+                            ? `<button class="view-user-events-btn text-indigo-600 dark:text-indigo-400 font-semibold hover:underline focus:outline-none cursor-pointer" data-user-id="${user.id}" data-user-email="${escapeHtml(user.email)}">${user.event_count}</button>`
+                            : `<span class="text-gray-400 dark:text-gray-600">0</span>`;
+
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">${escapeHtml(user.email)}</td>
+                            <td class="px-6 py-4">${escapeHtml(user.name || '-')}</td>
+                            <td class="px-6 py-4 text-center">${eventCountDisplay}</td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${loginBadgeClasses}">${loginMethod}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono text-xs">${registrationDisplay}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono text-xs">${lastLoginDisplay}</td>
+                        `;
+                        usersBody.appendChild(row);
+                    });
+                }
+                renderPagination(usersPagination, data.pagination, fetchAndRenderUsers);
+            } else {
+                usersError.textContent = data.error || 'Failed to load users.';
+                usersError.style.display = 'block';
+            }
+        };
+
+        // Debounced search for events
+        let eventsSearchTimeout;
+        const eventsSearch = document.getElementById('events-search');
+        const eventsSearchClear = document.getElementById('events-search-clear');
+        
+        eventsSearch.addEventListener('input', () => {
+            clearTimeout(eventsSearchTimeout);
+            eventsSearchClear.classList.toggle('hidden', eventsSearch.value.length === 0);
+            eventsSearchTimeout = setTimeout(() => {
+                fetchAndRenderEvents(1);
+            }, 400);
+        });
+
+        eventsSearchClear.addEventListener('click', () => {
+            eventsSearch.value = '';
+            eventsSearchClear.classList.add('hidden');
+            fetchAndRenderEvents(1);
+        });
+
+        // Debounced search for users
+        let usersSearchTimeout;
+        const usersSearch = document.getElementById('users-search');
+        const usersSearchClear = document.getElementById('users-search-clear');
+        
+        usersSearch.addEventListener('input', () => {
+            clearTimeout(usersSearchTimeout);
+            usersSearchClear.classList.toggle('hidden', usersSearch.value.length === 0);
+            usersSearchTimeout = setTimeout(() => {
+                fetchAndRenderUsers(1);
+            }, 400);
+        });
+
+        usersSearchClear.addEventListener('click', () => {
+            usersSearch.value = '';
+            usersSearchClear.classList.add('hidden');
+            fetchAndRenderUsers(1);
+        });
+
+        // Delegate event listener for clicking on "Events Created" count
+        usersBody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.view-user-events-btn');
+            if (btn) {
+                const userId = btn.getAttribute('data-user-id');
+                const userEmail = btn.getAttribute('data-user-email');
+                openUserEventsModal(userId, userEmail);
+            }
+        });
+
+        // --- User Events Modal Code ---
+        const userEventsModal = document.getElementById('user-events-modal');
+        const userEventsModalSubtitle = document.getElementById('user-events-modal-subtitle');
+        const modalEventsLoading = document.getElementById('modal-events-loading');
+        const modalEventsError = document.getElementById('modal-events-error');
+        const modalEventsTable = document.getElementById('modal-events-table');
+        const modalEventsBody = document.getElementById('modal-events-body');
+
+        const openUserEventsModal = async (userId, userEmail) => {
+            userEventsModal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            userEventsModalSubtitle.textContent = `Showing events created by ${userEmail}`;
+            modalEventsLoading.style.display = 'block';
+            modalEventsTable.style.display = 'none';
+            modalEventsError.style.display = 'none';
+            modalEventsBody.innerHTML = '';
+
+            try {
+                const data = await fetchData('events', 1, { user_id: userId, _limit: 100 });
+                modalEventsLoading.style.display = 'none';
+                
+                if (data && !data.error) {
+                    modalEventsTable.style.display = 'table';
+                    if (data.events.length === 0) {
+                        modalEventsBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500 dark:text-gray-400">No events found for this user.</td></tr>`;
+                    } else {
+                        data.events.forEach(event => {
+                            const row = document.createElement('tr');
+                            const createdDate = formatAdminDate(event.created_at);
+                            const eventLink = `https://whoisbringing.com/event/${event.share_id || event.id}`;
+
+                            row.innerHTML = `
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono text-xs">${createdDate || 'N/A'}</td>
+                                <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">${escapeHtml(event.event_name || event.title || 'Untitled')}</td>
+                                <td class="px-6 py-4 text-center">${event.item_count ?? 0}</td>
+                                <td class="px-6 py-4 text-center">${event.guest_count ?? 0}</td>
+                                <td class="px-6 py-4"><a href="${eventLink}" target="_blank" class="action-link">View Event</a></td>
+                            `;
+                            modalEventsBody.appendChild(row);
+                        });
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to fetch user events.');
+                }
+            } catch (err) {
+                modalEventsLoading.style.display = 'none';
+                modalEventsError.textContent = err.message;
+                modalEventsError.style.display = 'block';
+            }
+        };
+
+        const closeUserEventsModal = () => {
+            userEventsModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        };
+
+        document.getElementById('close-user-events-modal').addEventListener('click', closeUserEventsModal);
+        document.getElementById('close-user-events-modal-btn').addEventListener('click', closeUserEventsModal);
+        userEventsModal.addEventListener('click', (e) => {
+            if (e.target === userEventsModal) closeUserEventsModal();
+        });
+
+        // --- SEO Confirm Modal Code ---
+        const seoConfirmModal = document.getElementById('seo-confirm-modal');
+        const closeSeoConfirmModalBtn = document.getElementById('close-seo-confirm-modal');
+        const cancelSeoConfirmBtn = document.getElementById('cancel-seo-confirm-btn');
+        const confirmSeoConfirmBtn = document.getElementById('confirm-seo-confirm-btn');
+
+        let onSeoConfirmResolve = null;
+
+        const showSeoConfirmModal = () => {
+            return new Promise((resolve) => {
+                onSeoConfirmResolve = resolve;
+                seoConfirmModal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            });
+        };
+
+        const hideSeoConfirmModal = (result) => {
+            seoConfirmModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            if (onSeoConfirmResolve) {
+                onSeoConfirmResolve(result);
+                onSeoConfirmResolve = null;
+            }
+        };
+
+        closeSeoConfirmModalBtn.addEventListener('click', () => hideSeoConfirmModal(false));
+        cancelSeoConfirmBtn.addEventListener('click', () => hideSeoConfirmModal(false));
+        confirmSeoConfirmBtn.addEventListener('click', () => hideSeoConfirmModal(true));
+        
+        seoConfirmModal.addEventListener('click', (e) => {
+            if (e.target === seoConfirmModal) hideSeoConfirmModal(false);
+        });
+
+        // --- Escape key closes all modals ---
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (!userEventsModal.classList.contains('hidden')) closeUserEventsModal();
+                if (!seoConfirmModal.classList.contains('hidden')) hideSeoConfirmModal(false);
+                const seoEditModal = document.getElementById('seo-edit-modal');
+                if (seoEditModal && !seoEditModal.classList.contains('hidden')) closeSeoEditModalFunc();
+                const seoDeleteModal = document.getElementById('seo-delete-modal');
+                if (seoDeleteModal && !seoDeleteModal.classList.contains('hidden')) closeSeoDeleteModalFunc();
+            }
+        });
+
+        // --- Custom Toast Notification ---
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-5 right-5 z-[10000] px-4 py-3 rounded-lg shadow-xl text-white text-sm font-semibold transition-all duration-300 transform translate-y-10 opacity-0 ${
+                type === 'error' ? 'bg-red-500' : 'bg-emerald-500'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- HTML escape helper ---
+        const escapeHtml = (str) => {
+            if (!str) return "";
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
+        };
+
+        // --- SEO Centre Logic ---
+        const fetchAndRenderSeoHistory = async () => {
+            seoLoading.style.display = 'block';
+            seoTable.style.display = 'none';
+            seoError.style.display = 'none';
+            seoBody.innerHTML = '';
+
+            const data = await fetchPublic('/api/seo/articles');
+
+            seoLoading.style.display = 'none';
+            if (data && !data.error) {
+                seoTable.style.display = 'table';
+                const articles = data.articles || [];
+                if (articles.length === 0) {
+                    seoBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500 dark:text-gray-400">No articles generated yet. Click the trigger button above to generate.</td></tr>`;
+                } else {
+                    articles.forEach(art => {
+                        const row = document.createElement('tr');
+                        
+                        const publishedDate = formatAdminDate(art.created_at);
+                        
+                        const categoryLabel = art.category || 'General';
+                        const categoryBadge = `
+                            <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                ${escapeHtml(categoryLabel)}
+                            </span>
+                        `;
+                        
+                        const viewUrl = `https://whoisbringing.com/blog/${art.slug}`;
+                        const actionsHtml = `
+                            <div class="flex items-center justify-end gap-2">
+                                <a href="${viewUrl}" target="_blank" class="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-center" title="View Live">
+                                    <span class="material-symbols-outlined text-lg" style="font-size:18px;">open_in_new</span>
+                                </a>
+                                <button onclick="window.openEditSeoModal(${art.id})" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-center cursor-pointer" title="Edit Article">
+                                    <span class="material-symbols-outlined text-lg" style="font-size:18px;">edit</span>
+                                </button>
+                                <button onclick="window.confirmDeleteSeoArticle(${art.id}, '${escapeHtml((art.keyword || '').replace(/'/g, "\\'"))}')" class="text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors flex items-center justify-center cursor-pointer" title="Delete Article">
+                                    <span class="material-symbols-outlined text-lg" style="font-size:18px;">delete</span>
+                                </button>
+                            </div>
+                        `;
+
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono text-xs">${publishedDate || 'N/A'}</td>
+                            <td class="px-6 py-4 font-semibold text-gray-900 dark:text-gray-100">${escapeHtml(art.keyword || '')}</td>
+                            <td class="px-6 py-4 max-w-xs truncate" title="${escapeHtml(art.title || '')}">${escapeHtml(art.title || '')}</td>
+                            <td class="px-6 py-4 text-center">${categoryBadge}</td>
+                            <td class="px-6 py-4 text-right">${actionsHtml}</td>
+                        `;
+                        seoBody.appendChild(row);
+                    });
+                }
+            } else {
+                seoError.textContent = data.error || 'Failed to load SEO articles.';
+                seoError.style.display = 'block';
+            }
+        };
+
+        runSeoBtn.addEventListener('click', async () => {
+            if (runSeoText.textContent.includes('Running')) return;
+            
+            const confirmed = await showSeoConfirmModal();
+            if (!confirmed) return;
+
+            runSeoBtn.disabled = true;
+            runSeoSpinner.classList.remove('hidden');
+            runSeoText.textContent = 'Running Pipeline...';
+            seoStatusContainer.classList.add('hidden');
+            seoStatusContainer.innerHTML = '';
+
+            try {
+                const url = `${API_BASE}/api/admin/seo/generate`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Admin-Auth': ADMIN_AUTH }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    seoStatusContainer.className = "bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800/30 rounded-xl p-6 mb-6 flex flex-col gap-2 text-green-800 dark:text-green-300";
+                    seoStatusContainer.innerHTML = `
+                        <div class="flex items-center gap-2 font-bold text-lg">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            SEO Pipeline Executed Successfully!
+                        </div>
+                        <div class="text-sm">
+                            <p class="mb-1"><strong>Keyword Chosen:</strong> "${escapeHtml(data.opportunity?.keyword || data.keyword || 'N/A')}"</p>
+                            <p class="mb-1"><strong>Generated Article:</strong> "${escapeHtml(data.opportunity?.title || data.title || 'N/A')}"</p>
+                            ${data.opportunity?.slug || data.slug ? `<p class="mb-1"><strong>Slug / URL:</strong> <a href="https://whoisbringing.com/blog/${data.opportunity?.slug || data.slug}" target="_blank" class="underline font-semibold hover:text-green-600">/blog/${escapeHtml(data.opportunity?.slug || data.slug)}</a></p>` : ''}
+                        </div>
+                    `;
+                    seoStatusContainer.classList.remove('hidden');
+                    showToast('SEO Pipeline completed successfully!', 'success');
+                    await fetchAndRenderSeoHistory();
+                } else {
+                    throw new Error(data.error || 'Pipeline run returned failure status.');
+                }
+            } catch (err) {
+                console.error("SEO Pipeline Trigger Error:", err);
+                seoStatusContainer.className = "bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800/30 rounded-xl p-6 mb-6 flex items-center gap-2 text-red-800 dark:text-red-300";
+                seoStatusContainer.innerHTML = `
+                    <span class="material-symbols-outlined">error</span>
+                    <div>
+                        <div class="font-bold">Failed to Run SEO Pipeline</div>
+                        <div class="text-sm mt-0.5">${escapeHtml(err.message)}</div>
+                    </div>
+                `;
+                seoStatusContainer.classList.remove('hidden');
+                showToast('SEO Pipeline failed: ' + err.message, 'error');
+            } finally {
+                runSeoBtn.disabled = false;
+                runSeoSpinner.classList.add('hidden');
+                runSeoText.textContent = 'Trigger SEO Pipeline';
+            }
+        });
+
+        // --- SEO Edit/Delete Modal Code ---
+        const seoEditModal = document.getElementById('seo-edit-modal');
+        const seoEditForm = document.getElementById('seo-edit-form');
+        const closeSeoEditModalEl = document.getElementById('close-seo-edit-modal');
+        const cancelSeoEditBtn = document.getElementById('cancel-seo-edit-btn');
+        const saveSeoEditBtn = document.getElementById('save-seo-edit-btn');
+        const saveSeoSpinner = document.getElementById('save-seo-spinner');
+        const saveSeoText = document.getElementById('save-seo-text');
+        
+        const seoDeleteModal = document.getElementById('seo-delete-modal');
+        const seoDeleteKeywordLabel = document.getElementById('seo-delete-keyword-label');
+        const cancelSeoDeleteBtn = document.getElementById('cancel-seo-delete-btn');
+        const confirmSeoDeleteBtn = document.getElementById('confirm-seo-delete-btn');
+        const deleteSeoSpinner = document.getElementById('delete-seo-spinner');
+        const deleteSeoText = document.getElementById('delete-seo-text');
+
+        let pendingDeleteArticleId = null;
+
+        // Open edit modal
+        window.openEditSeoModal = async (id) => {
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/seo/articles/${id}`, {
+                    headers: { 'X-Admin-Auth': ADMIN_AUTH }
+                });
+                const data = await res.json();
+                if (data.success && data.article) {
+                    const art = data.article;
+                    document.getElementById('seo-edit-id').value = art.id;
+                    document.getElementById('seo-edit-keyword').value = art.keyword || '';
+                    document.getElementById('seo-edit-slug').value = art.slug || '';
+                    document.getElementById('seo-edit-title').value = art.title || '';
+                    document.getElementById('seo-edit-meta').value = art.meta_description || '';
+                    
+                    // Set custom dropdown value
+                    setSeoEditCategoryValue(art.category || 'General');
+                    
+                    document.getElementById('seo-edit-content').value = art.content || '';
+                    
+                    seoEditModal.classList.remove('hidden');
+                    document.body.classList.add('overflow-hidden');
+                } else {
+                    showToast(data.error || 'Failed to fetch article details.', 'error');
+                }
+            } catch (err) {
+                console.error("Fetch article error:", err);
+                showToast("An error occurred while fetching article details.", 'error');
+            }
+        };
+
+        const closeSeoEditModalFunc = () => {
+            seoEditModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            seoEditForm.reset();
+        };
+
+        closeSeoEditModalEl.addEventListener('click', closeSeoEditModalFunc);
+        cancelSeoEditBtn.addEventListener('click', closeSeoEditModalFunc);
+        seoEditModal.addEventListener('click', (e) => {
+            if (e.target === seoEditModal) closeSeoEditModalFunc();
+        });
+
+        saveSeoEditBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            if (!seoEditForm.checkValidity()) {
+                seoEditForm.reportValidity();
+                return;
+            }
+
+            const id = document.getElementById('seo-edit-id').value;
+            const payload = {
+                keyword: document.getElementById('seo-edit-keyword').value,
+                slug: document.getElementById('seo-edit-slug').value,
+                title: document.getElementById('seo-edit-title').value,
+                meta_description: document.getElementById('seo-edit-meta').value,
+                category: document.getElementById('seo-edit-category-value').value,
+                content: document.getElementById('seo-edit-content').value
+            };
+
+            saveSeoEditBtn.disabled = true;
+            saveSeoSpinner.classList.remove('hidden');
+            saveSeoText.textContent = 'Saving...';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/seo/articles/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'X-Admin-Auth': ADMIN_AUTH
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeSeoEditModalFunc();
+                    showToast('Article updated successfully!', 'success');
+                    await fetchAndRenderSeoHistory();
+                } else {
+                    showToast(data.error || 'Failed to save changes.', 'error');
+                }
+            } catch (err) {
+                console.error("Save article error:", err);
+                showToast("An error occurred while saving the article.", 'error');
+            } finally {
+                saveSeoEditBtn.disabled = false;
+                saveSeoSpinner.classList.add('hidden');
+                saveSeoText.textContent = 'Save Changes';
+            }
+        });
+
+        // --- SEO Edit Category Custom Dropdown ---
+        const seoCategoryDropdownBtn = document.getElementById('seo-edit-category-btn');
+        const seoCategoryDropdownMenu = document.getElementById('seo-edit-category-menu');
+        const seoCategoryDropdownArrow = document.getElementById('seo-edit-category-arrow');
+        const seoCategoryDropdownLabel = document.getElementById('seo-edit-category-label');
+        const seoCategoryHiddenInput = document.getElementById('seo-edit-category-value');
+        const seoCategoryOptions = document.querySelectorAll('.seo-category-option');
+        const seoCategoryContainer = document.getElementById('seo-edit-category-container');
+        let isCategoryDropdownOpen = false;
+
+        const openCategoryDropdown = () => {
+            isCategoryDropdownOpen = true;
+            seoCategoryDropdownMenu.classList.remove('hidden');
+            setTimeout(() => {
+                seoCategoryDropdownMenu.classList.remove('opacity-0', 'scale-95');
+                seoCategoryDropdownMenu.classList.add('opacity-100', 'scale-100');
+            }, 10);
+            seoCategoryDropdownArrow.classList.add('rotate-180');
+        };
+
+        const closeCategoryDropdown = () => {
+            isCategoryDropdownOpen = false;
+            seoCategoryDropdownMenu.classList.remove('opacity-100', 'scale-100');
+            seoCategoryDropdownMenu.classList.add('opacity-0', 'scale-95');
+            seoCategoryDropdownArrow.classList.remove('rotate-180');
+            setTimeout(() => {
+                if (!isCategoryDropdownOpen) seoCategoryDropdownMenu.classList.add('hidden');
+            }, 100);
+        };
+
+        seoCategoryDropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (isCategoryDropdownOpen) closeCategoryDropdown();
+            else openCategoryDropdown();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (isCategoryDropdownOpen && !seoCategoryContainer.contains(e.target)) {
+                closeCategoryDropdown();
+            }
+        });
+
+        const setSeoEditCategoryValue = (value) => {
+            seoCategoryHiddenInput.value = value;
+            seoCategoryDropdownLabel.textContent = value;
+            seoCategoryOptions.forEach(opt => {
+                const checkmark = opt.querySelector('.cat-checkmark');
+                if (opt.getAttribute('data-value') === value) {
+                    checkmark.classList.remove('hidden');
+                    opt.classList.add('bg-indigo-600', 'text-white');
+                    opt.classList.remove('text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                } else {
+                    checkmark.classList.add('hidden');
+                    opt.classList.remove('bg-indigo-600', 'text-white');
+                    opt.classList.add('text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-100', 'dark:hover:bg-gray-700');
+                }
+            });
+        };
+
+        seoCategoryOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const value = option.getAttribute('data-value');
+                setSeoEditCategoryValue(value);
+                closeCategoryDropdown();
+            });
+        });
+
+        // Delete article
+        window.confirmDeleteSeoArticle = (id, keyword) => {
+            pendingDeleteArticleId = id;
+            seoDeleteKeywordLabel.textContent = keyword;
+            seoDeleteModal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        };
+
+        const closeSeoDeleteModalFunc = () => {
+            seoDeleteModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            pendingDeleteArticleId = null;
+        };
+
+        cancelSeoDeleteBtn.addEventListener('click', closeSeoDeleteModalFunc);
+        seoDeleteModal.addEventListener('click', (e) => {
+            if (e.target === seoDeleteModal) closeSeoDeleteModalFunc();
+        });
+
+        confirmSeoDeleteBtn.addEventListener('click', async () => {
+            if (!pendingDeleteArticleId) return;
+
+            confirmSeoDeleteBtn.disabled = true;
+            deleteSeoSpinner.classList.remove('hidden');
+            deleteSeoText.textContent = 'Deleting...';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/seo/articles/${pendingDeleteArticleId}`, {
+                    method: 'DELETE',
+                    headers: { 'X-Admin-Auth': ADMIN_AUTH }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    closeSeoDeleteModalFunc();
+                    showToast('Article deleted successfully!', 'success');
+                    await fetchAndRenderSeoHistory();
+                } else {
+                    showToast(data.error || 'Failed to delete article.', 'error');
+                }
+            } catch (err) {
+                console.error("Delete article error:", err);
+                showToast("An error occurred while deleting the article.", 'error');
+            } finally {
+                confirmSeoDeleteBtn.disabled = false;
+                deleteSeoSpinner.classList.add('hidden');
+                deleteSeoText.textContent = 'Delete';
+            }
+        });
+
+        const refreshAllData = async (isManualRefresh = false) => {
+            if (isManualRefresh) {
+                if (refreshState === 'loading') return;
+                setRefreshState('loading');
+            }
+            try {
+                const fetches = [
+                    fetchAndRenderStats(),
+                    fetchAndRenderEvents(),
+                    fetchAndRenderUsers()
+                ];
+                if (isManualRefresh && activeTab === 'reporting') {
+                    fetches.push(fetchAndRenderReporting());
+                }
+                if (isManualRefresh && activeTab === 'seo') {
+                    fetches.push(fetchAndRenderSeoHistory());
+                }
+                await Promise.all(fetches);
+                if (isManualRefresh) setRefreshState('success');
+            } catch (error) {
+                if (isManualRefresh) setRefreshState('error');
+            }
+        };
+
+        refreshBtn.addEventListener('click', () => refreshAllData(true));
+
+        // --- Initial Load ---
+        initTheme();
+        initDateInputs();
+        
+        const initialHash = window.location.hash.substring(1);
+        if (initialHash === 'reporting') {
+            switchTab('reporting', false);
+        } else if (initialHash === 'seo') {
+            switchTab('seo', false);
+        } else {
+            switchTab('overview', false);
+        }
+        
+        refreshAllData();
+    });
+    </script>
+
+    <!-- User Events Modal -->
+    <div id="user-events-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">User Events</h3>
+                    <p id="user-events-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                </div>
+                <button id="close-user-events-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none cursor-pointer">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <!-- Modal Content -->
+            <div class="p-6 overflow-y-auto flex-grow">
+                <div id="modal-events-loading" class="text-center py-12"><p>Loading events...</p></div>
+                <div id="modal-events-error" class="hidden text-center py-12 text-red-500"></div>
+                <div class="overflow-x-auto">
+                    <table id="modal-events-table" class="hidden w-full text-sm text-left">
+                        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Created At</th>
+                                <th scope="col" class="px-6 py-3">Event Name</th>
+                                <th scope="col" class="px-6 py-3 text-center">Items</th>
+                                <th scope="col" class="px-6 py-3 text-center">Guests</th>
+                                <th scope="col" class="px-6 py-3">Link</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modal-events-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <button id="close-user-events-modal-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-gray-200 rounded-lg transition-colors text-sm font-semibold cursor-pointer">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEO Confirm Modal -->
+    <div id="seo-confirm-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-indigo-500">info</span>
+                    Confirm SEO Pipeline Execution
+                </h3>
+                <button id="close-seo-confirm-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none cursor-pointer">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <!-- Modal Content -->
+            <div class="p-6 text-gray-700 dark:text-gray-300 space-y-4">
+                <p class="text-base font-semibold">Are you sure you want to trigger the automated SEO generation pipeline?</p>
+                <div class="text-sm bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl border border-gray-200 dark:border-gray-700 leading-relaxed text-gray-600 dark:text-gray-400">
+                    This will query Google Search Console for striking-distance keywords, write an optimised article with Gemini AI, store it in D1, and submit it to the Google Indexing API for fast crawling.
+                </div>
+            </div>
+            <!-- Modal Footer -->
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button id="cancel-seo-confirm-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors text-sm font-semibold cursor-pointer">Cancel</button>
+                <button id="confirm-seo-confirm-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-md cursor-pointer">Run Pipeline</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit SEO Article Modal -->
+    <div id="seo-edit-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-700">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50 flex-shrink-0">
+                <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-indigo-500">edit_note</span>
+                    Edit SEO Article
+                </h3>
+                <button id="close-seo-edit-modal" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none cursor-pointer">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <!-- Modal Body -->
+            <form id="seo-edit-form" class="p-6 space-y-4 overflow-y-auto flex-1 text-gray-700 dark:text-gray-300">
+                <input type="hidden" id="seo-edit-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="seo-edit-keyword" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Target Keyword</label>
+                        <input type="text" id="seo-edit-keyword" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none transition-all">
+                    </div>
+                    <div>
+                        <label for="seo-edit-slug" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Slug / URL Path</label>
+                        <input type="text" id="seo-edit-slug" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-mono focus:outline-none transition-all">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="seo-edit-title" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Page Title</label>
+                    <input type="text" id="seo-edit-title" required class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none transition-all">
+                </div>
+
+                <div>
+                    <label for="seo-edit-meta" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Meta Description</label>
+                    <textarea id="seo-edit-meta" rows="2" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none transition-all"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                    <input type="hidden" id="seo-edit-category-value" value="General">
+                    <div class="relative inline-block text-left w-full" id="seo-edit-category-container">
+                        <button type="button" id="seo-edit-category-btn" class="flex items-center justify-between text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer w-full gap-1">
+                            <span id="seo-edit-category-label">General</span>
+                            <span id="seo-edit-category-arrow" class="material-symbols-outlined transition-transform duration-200" style="font-size: 18px; line-height: 1;">expand_more</span>
+                        </button>
+                        <div id="seo-edit-category-menu" class="hidden absolute left-0 mt-1.5 w-full rounded-lg shadow-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 focus:outline-none z-30 transition-all transform origin-top scale-95 opacity-0 duration-100">
+                            <div class="py-1" role="menu">
+                                <button type="button" class="seo-category-option flex items-center justify-between w-full px-3 py-2 text-sm bg-indigo-600 text-white text-left transition-colors" data-value="General">
+                                    <span>General</span>
+                                    <span class="cat-checkmark material-symbols-outlined text-white" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                                <button type="button" class="seo-category-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left transition-colors" data-value="Event Planning">
+                                    <span>Event Planning</span>
+                                    <span class="cat-checkmark material-symbols-outlined text-[#6366f1] hidden" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                                <button type="button" class="seo-category-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left transition-colors" data-value="Potluck">
+                                    <span>Potluck</span>
+                                    <span class="cat-checkmark material-symbols-outlined text-[#6366f1] hidden" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                                <button type="button" class="seo-category-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left transition-colors" data-value="Tips & Guides">
+                                    <span>Tips & Guides</span>
+                                    <span class="cat-checkmark material-symbols-outlined text-[#6366f1] hidden" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                                <button type="button" class="seo-category-option flex items-center justify-between w-full px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 text-left transition-colors" data-value="Comparison">
+                                    <span>Comparison</span>
+                                    <span class="cat-checkmark material-symbols-outlined text-[#6366f1] hidden" style="font-size: 16px; line-height: 1;">check</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="seo-edit-content" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Content (HTML)</label>
+                    <textarea id="seo-edit-content" required rows="10" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50 dark:bg-gray-700 font-mono text-sm text-gray-800 dark:text-gray-200 focus:outline-none transition-all"></textarea>
+                </div>
+            </form>
+            
+            <!-- Modal Footer -->
+            <div class="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3 flex-shrink-0 bg-gray-50 dark:bg-gray-700/50">
+                <button id="cancel-seo-edit-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors text-sm font-semibold cursor-pointer">Cancel</button>
+                <button id="save-seo-edit-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-md flex items-center gap-1.5 focus:outline-none cursor-pointer">
+                    <span id="save-seo-spinner" class="hidden animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                    <span id="save-seo-text">Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete SEO Confirmation Modal -->
+    <div id="seo-delete-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6 border border-gray-200 dark:border-gray-700">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/20 flex items-center justify-center text-red-600">
+                    <span class="material-symbols-outlined">warning</span>
+                </div>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Delete SEO Article</h3>
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                Are you sure you want to delete the article for keyword "<strong id="seo-delete-keyword-label" class="text-gray-900 dark:text-gray-100"></strong>"? This action cannot be undone.
+            </p>
+            <div class="flex justify-end gap-3">
+                <button id="cancel-seo-delete-btn" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors text-sm font-semibold cursor-pointer">Cancel</button>
+                <button id="confirm-seo-delete-btn" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-md flex items-center gap-1.5 focus:outline-none cursor-pointer">
+                    <span id="delete-seo-spinner" class="hidden animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                    <span id="delete-seo-text">Delete</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
