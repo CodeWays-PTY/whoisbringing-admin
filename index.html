@@ -1377,8 +1377,8 @@
                         const registrationDisplay = formatAdminDate(user.created_at) || 'N/A';
                         const lastLoginDisplay = formatAdminDate(user.last_login_at) || 'Never';
 
-                        const eventCountDisplay = user.event_count > 0 
-                            ? `<button class="view-user-events-btn text-indigo-600 dark:text-indigo-400 font-semibold hover:underline focus:outline-none cursor-pointer" data-user-id="${user.id}" data-user-email="${escapeHtml(user.email)}">${user.event_count}</button>`
+                        const eventCountDisplay = user.events_created > 0 
+                            ? `<button class="view-user-events-btn text-indigo-600 dark:text-indigo-400 font-semibold hover:underline focus:outline-none cursor-pointer" data-user-id="${user.id}" data-user-email="${escapeHtml(user.email)}">${user.events_created}</button>`
                             : `<span class="text-gray-400 dark:text-gray-600">0</span>`;
 
                         row.innerHTML = `
