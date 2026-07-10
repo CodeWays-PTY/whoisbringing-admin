@@ -507,6 +507,7 @@
                                     <th scope="col" class="px-6 py-3">Published At</th>
                                     <th scope="col" class="px-6 py-3">Target Keyword</th>
                                     <th scope="col" class="px-6 py-3">Title</th>
+                                    <th scope="col" class="px-6 py-3">Type</th>
                                     <th scope="col" class="px-6 py-3">Category</th>
                                     <th scope="col" class="px-6 py-3 text-right">Actions</th>
                                 </tr>
@@ -559,13 +560,13 @@
                     <!-- Recipient Email -->
                     <div>
                         <label for="custom-email-recipient" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Recipient Email</label>
-                        <input type="email" id="custom-email-recipient" placeholder="Enter recipient email address..." class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#6366f1] bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:outline-none transition-all duration-200" />
+                        <input type="email" id="custom-email-recipient" autocomplete="off" placeholder="Enter recipient email address..." class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#6366f1] bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:outline-none transition-all duration-200" />
                     </div>
 
                     <!-- Subject -->
                     <div>
                         <label for="custom-email-subject" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Subject</label>
-                        <input type="text" id="custom-email-subject" placeholder="e.g. Help with your WhoIsBringing account" class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#6366f1] bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:outline-none transition-all duration-200" />
+                        <input type="text" id="custom-email-subject" autocomplete="off" placeholder="e.g. Help with your WhoIsBringing account" class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#6366f1] bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:outline-none transition-all duration-200" />
                     </div>
 
                     <!-- Message Message -->
@@ -582,6 +583,17 @@
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Sent Custom Emails History List -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6 max-w-3xl">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#6366f1]">history</span>
+                    Sent Custom Emails Log
+                </h3>
+                <div id="custom-emails-loading" class="text-center py-6 text-sm text-gray-500 dark:text-gray-400">Loading log...</div>
+                <div id="custom-emails-error" class="hidden text-center py-6 text-sm text-red-500"></div>
+                <div class="overflow-y-auto max-h-80 pr-1 space-y-3" id="custom-emails-list" style="display: none;"></div>
             </div>
         </div>
     </div>
@@ -813,6 +825,7 @@
                 tabFeedback.className = activeClass;
                 viewFeedback.classList.remove('hidden');
                 fetchAndRenderFeedback();
+                if (window.fetchAndRenderCustomEmails) window.fetchAndRenderCustomEmails();
             }
         };
 
@@ -1599,13 +1612,18 @@
                 seoTable.style.display = 'table';
                 const articles = data.articles || [];
                 if (articles.length === 0) {
-                    seoBody.innerHTML = `<tr><td colspan="5" class="text-center p-8 text-gray-500 dark:text-gray-400">No articles generated yet. Click the trigger button above to generate.</td></tr>`;
+                    seoBody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-500 dark:text-gray-400">No articles generated yet. Click the trigger button above to generate.</td></tr>`;
                 } else {
                     articles.forEach(art => {
                         const row = document.createElement('tr');
                         
                         const publishedDate = formatAdminDate(art.created_at);
                         
+                        const isTemplate = art.type === 'template';
+                        const typeBadge = isTemplate
+                            ? `<span class="px-2.5 py-0.5 inline-flex text-[11px] leading-5 font-bold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">Template</span>`
+                            : `<span class="px-2.5 py-0.5 inline-flex text-[11px] leading-5 font-bold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">Article</span>`;
+
                         const categoryLabel = art.category || 'General';
                         const categoryBadge = `
                             <span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
@@ -1613,16 +1631,18 @@
                             </span>
                         `;
                         
-                        const viewUrl = `https://whoisbringing.com/blog/${art.slug}`;
+                        const viewUrl = isTemplate
+                            ? `https://whoisbringing.com/templates/${art.slug}`
+                            : `https://whoisbringing.com/blog/${art.slug}`;
                         const actionsHtml = `
                             <div class="flex items-center justify-end gap-2">
-                                <a href="${viewUrl}" target="_blank" class="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-center" title="View Live">
+                                <a href="${viewUrl}" target="_blank" class="text-indigo-600 hover:text-indigo-550 dark:text-indigo-400 dark:hover:text-indigo-300 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-center" title="View Live">
                                     <span class="material-symbols-outlined text-lg" style="font-size:18px;">open_in_new</span>
                                 </a>
-                                <button onclick="window.openEditSeoModal(${art.id})" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-center cursor-pointer" title="Edit Article">
+                                <button onclick="window.openEditSeoModal(${art.id})" class="text-gray-500 hover:text-gray-755 dark:text-gray-400 dark:hover:text-gray-200 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors flex items-center justify-center cursor-pointer" title="Edit Article">
                                     <span class="material-symbols-outlined text-lg" style="font-size:18px;">edit</span>
                                 </button>
-                                <button onclick="window.confirmDeleteSeoArticle(${art.id}, '${escapeHtml((art.keyword || '').replace(/'/g, "\\'"))}')" class="text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors flex items-center justify-center cursor-pointer" title="Delete Article">
+                                <button onclick="window.confirmDeleteSeoArticle(${art.id}, '${escapeHtml((art.keyword || '').replace(/'/g, "\\'"))}')" class="text-red-655 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors flex items-center justify-center cursor-pointer" title="Delete Article">
                                     <span class="material-symbols-outlined text-lg" style="font-size:18px;">delete</span>
                                 </button>
                             </div>
@@ -1632,7 +1652,8 @@
                             <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono text-xs">${publishedDate || 'N/A'}</td>
                             <td class="px-6 py-4 font-semibold text-gray-900 dark:text-gray-100">${escapeHtml(art.keyword || '')}</td>
                             <td class="px-6 py-4 max-w-xs truncate" title="${escapeHtml(art.title || '')}">${escapeHtml(art.title || '')}</td>
-                            <td class="px-6 py-4 text-center">${categoryBadge}</td>
+                            <td class="px-6 py-4">${typeBadge}</td>
+                            <td class="px-6 py-4">${categoryBadge}</td>
                             <td class="px-6 py-4 text-right">${actionsHtml}</td>
                         `;
                         seoBody.appendChild(row);
@@ -2192,11 +2213,70 @@
                 customEmailRecipient.value = '';
                 document.getElementById('custom-email-subject').value = '';
                 document.getElementById('custom-email-message').value = '';
+                await window.fetchAndRenderCustomEmails();
             } catch (err) {
                 showToast(err.message, 'error');
             } finally {
                 btn.disabled = false;
                 text.textContent = originalText;
+            }
+        };
+
+        window.fetchAndRenderCustomEmails = async () => {
+            const listContainer = document.getElementById('custom-emails-list');
+            const loadingEl = document.getElementById('custom-emails-loading');
+            const errorEl = document.getElementById('custom-emails-error');
+
+            if (!listContainer || !loadingEl || !errorEl) return;
+
+            loadingEl.style.display = 'block';
+            listContainer.style.display = 'none';
+            errorEl.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/email/custom-list`, {
+                    headers: { 'X-Admin-Auth': ADMIN_AUTH }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to load custom email log.');
+
+                loadingEl.style.display = 'none';
+                listContainer.style.display = 'block';
+                listContainer.innerHTML = '';
+
+                const emails = data.emails || [];
+                if (emails.length === 0) {
+                    listContainer.innerHTML = `<div class="text-center py-6 text-xs text-gray-550 dark:text-gray-400">No custom support emails sent yet.</div>`;
+                    return;
+                }
+
+                emails.forEach(email => {
+                    const item = document.createElement('div');
+                    item.className = 'p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-150 dark:border-gray-750 text-xs space-y-2';
+                    const sentAt = formatAdminDate(email.replied_at);
+                    item.innerHTML = `
+                        <div class="flex justify-between items-center text-gray-400 font-mono text-[10px]">
+                            <span>Sent: ${sentAt}</span>
+                            <span class="font-bold text-indigo-500 uppercase tracking-wider text-[9px]">Custom Support</span>
+                        </div>
+                        <div>
+                            <span class="text-gray-550 dark:text-gray-400">To:</span>
+                            <strong class="text-gray-800 dark:text-gray-250 font-semibold">${escapeHtml(email.recipient_email)}</strong>
+                        </div>
+                        <div>
+                            <span class="text-gray-550 dark:text-gray-400">Subject:</span>
+                            <strong class="text-gray-800 dark:text-gray-250 font-semibold">${escapeHtml(email.subject || 'N/A')}</strong>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 border border-gray-150 dark:border-gray-700 p-3 rounded-lg text-gray-700 dark:text-gray-305 font-sans whitespace-pre-wrap leading-relaxed">
+                            ${escapeHtml(email.reply_message)}
+                        </div>
+                    `;
+                    listContainer.appendChild(item);
+                });
+            } catch (err) {
+                loadingEl.style.display = 'none';
+                errorEl.textContent = err.message;
+                errorEl.classList.remove('hidden');
             }
         };
 
@@ -2219,6 +2299,7 @@
                 }
                 if (isManualRefresh && activeTab === 'feedback') {
                     fetches.push(fetchAndRenderFeedback());
+                    if (window.fetchAndRenderCustomEmails) fetches.push(window.fetchAndRenderCustomEmails());
                 }
                 await Promise.all(fetches);
                 if (isManualRefresh) setRefreshState('success');
