@@ -2018,7 +2018,7 @@
                             feedbackBody.appendChild(row);
                         });
                         
-                        renderPagination(data.pagination, feedbackPagination, fetchAndRenderFeedback);
+                        renderPagination(feedbackPagination, data.pagination, fetchAndRenderFeedback);
                     }
                 } else {
                     throw new Error(data?.error || 'Failed to fetch feedback list.');
