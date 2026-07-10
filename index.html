@@ -791,6 +791,14 @@
 
         let activeTab = 'overview';
 
+        // --- Request ID Trackers to Prevent Concurrent Render Race Conditions ---
+        let eventsRequestId = 0;
+        let usersRequestId = 0;
+        let feedbackRequestId = 0;
+        let seoRequestId = 0;
+        let reportingRequestId = 0;
+        let customEmailsRequestId = 0;
+
         const switchTab = (tabName, updateHash = true) => {
             activeTab = tabName;
             if (updateHash) {
@@ -1092,8 +1100,10 @@
         };
 
         const fetchAndRenderReporting = async () => {
+            const reqId = ++reportingRequestId;
             const params = getReportingDateParams();
             const data = await fetchData('reporting', 1, params);
+            if (reqId !== reportingRequestId) return;
             if (data && !data.error) {
                 renderKPIs(data.summary);
                 renderCharts(data.trends, params.chart_start, params.chart_end);
@@ -1313,6 +1323,7 @@
         };
 
         const fetchAndRenderEvents = async (page = 1) => {
+            const reqId = ++eventsRequestId;
             eventsLoading.style.display = 'block';
             eventsTable.style.display = 'none';
             eventsError.style.display = 'none';
@@ -1324,6 +1335,7 @@
             }
 
             const data = await fetchData('events', page, params);
+            if (reqId !== eventsRequestId) return;
 
             eventsLoading.style.display = 'none';
             if (data && !data.error) {
@@ -1359,6 +1371,7 @@
 
         // --- Users Section ---
         const fetchAndRenderUsers = async (page = 1) => {
+            const reqId = ++usersRequestId;
             usersLoading.style.display = 'block';
             usersTable.style.display = 'none';
             usersError.style.display = 'none';
@@ -1370,6 +1383,7 @@
             }
 
             const data = await fetchData('users', page, params);
+            if (reqId !== usersRequestId) return;
 
             usersLoading.style.display = 'none';
             if (data && !data.error) {
@@ -1600,12 +1614,14 @@
 
         // --- SEO Centre Logic ---
         const fetchAndRenderSeoHistory = async () => {
+            const reqId = ++seoRequestId;
             seoLoading.style.display = 'block';
             seoTable.style.display = 'none';
             seoError.style.display = 'none';
             seoBody.innerHTML = '';
 
             const data = await fetchPublic('/api/seo/articles');
+            if (reqId !== seoRequestId) return;
 
             seoLoading.style.display = 'none';
             if (data && !data.error) {
@@ -1955,6 +1971,7 @@
         let feedbackDataStore = {};
 
         const fetchAndRenderFeedback = async (page = 1) => {
+            const reqId = ++feedbackRequestId;
             currentFeedbackPage = page;
             feedbackLoading.style.display = 'block';
             feedbackTable.style.display = 'none';
@@ -1964,6 +1981,7 @@
 
             try {
                 const data = await fetchData(`feedback?page=${page}&limit=${PER_PAGE}`);
+                if (reqId !== feedbackRequestId) return;
                 feedbackLoading.style.display = 'none';
 
                 if (data && data.success && data.feedback) {
@@ -2045,6 +2063,7 @@
                     throw new Error(data?.error || 'Failed to fetch feedback list.');
                 }
             } catch (err) {
+                if (reqId !== feedbackRequestId) return;
                 console.error("Fetch feedback error:", err);
                 feedbackLoading.style.display = 'none';
                 feedbackError.textContent = err.message || 'An error occurred while loading feedback.';
@@ -2223,6 +2242,7 @@
         };
 
         window.fetchAndRenderCustomEmails = async () => {
+            const reqId = ++customEmailsRequestId;
             const listContainer = document.getElementById('custom-emails-list');
             const loadingEl = document.getElementById('custom-emails-loading');
             const errorEl = document.getElementById('custom-emails-error');
@@ -2237,6 +2257,7 @@
                 const res = await fetch(`${API_BASE}/api/admin/email/custom-list`, {
                     headers: { 'X-Admin-Auth': ADMIN_AUTH }
                 });
+                if (reqId !== customEmailsRequestId) return;
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Failed to load custom email log.');
 
@@ -2274,6 +2295,7 @@
                     listContainer.appendChild(item);
                 });
             } catch (err) {
+                if (reqId !== customEmailsRequestId) return;
                 loadingEl.style.display = 'none';
                 errorEl.textContent = err.message;
                 errorEl.classList.remove('hidden');
