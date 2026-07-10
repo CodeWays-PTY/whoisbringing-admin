@@ -223,6 +223,10 @@
                 <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">search</span>
                 SEO Centre
             </button>
+            <button id="tab-feedback" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none">
+                <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">chat_bubble</span>
+                Feedback & Support
+            </button>
         </div>
 
         <div id="view-overview" class="space-y-8">
@@ -513,6 +517,73 @@
                 </div>
             </div>
         </div>
+
+        <!-- Feedback & Support View -->
+        <div id="view-feedback" class="hidden space-y-8 pb-12">
+            <!-- Feedback table section -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-800/50">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[#6366f1]">chat_bubble</span>
+                        User Feedback & Bug Reports
+                    </h2>
+                </div>
+                <div id="feedback-loading" class="text-center p-12"><p>Loading feedback...</p></div>
+                <div id="feedback-error" class="hidden text-center p-12 text-red-500"></div>
+                <div class="overflow-x-auto">
+                    <table id="feedback-table" class="hidden w-full text-sm text-left">
+                        <thead class="text-xs uppercase bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-400">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Submitted At</th>
+                                <th scope="col" class="px-6 py-3">Type</th>
+                                <th scope="col" class="px-6 py-3">Sender</th>
+                                <th scope="col" class="px-6 py-3">Details</th>
+                                <th scope="col" class="px-6 py-3 text-center">Screenshot</th>
+                                <th scope="col" class="px-6 py-3">Page URL</th>
+                                <th scope="col" class="px-6 py-3 text-right font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedback-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
+                    </table>
+                </div>
+                <div id="feedback-pagination" class="p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between"></div>
+            </div>
+
+            <!-- Custom support email dispatch section -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-200 dark:border-gray-700 p-6 max-w-3xl">
+                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-[#6366f1]">send</span>
+                    Send Custom Support Email
+                </h2>
+                <div class="space-y-4">
+                    <!-- Recipient Email -->
+                    <div>
+                        <label for="custom-email-recipient" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Recipient Email</label>
+                        <input type="email" id="custom-email-recipient" placeholder="Enter recipient email address..." class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#6366f1] bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:outline-none transition-all duration-200" />
+                    </div>
+
+                    <!-- Subject -->
+                    <div>
+                        <label for="custom-email-subject" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Subject</label>
+                        <input type="text" id="custom-email-subject" placeholder="e.g. Help with your WhoIsBringing account" class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-[#6366f1] bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm focus:outline-none transition-all duration-200" />
+                    </div>
+
+                    <!-- Message Message -->
+                    <div>
+                        <label for="custom-email-message" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Message</label>
+                        <textarea id="custom-email-message" rows="6" placeholder="Compose your email message..." class="w-full px-4 py-2.5 border border-gray-350 dark:border-gray-650 rounded-lg focus:ring-2 focus:ring-[#6366f1] bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-sans focus:outline-none transition-all duration-200"></textarea>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="pt-2 flex justify-end">
+                        <button id="send-custom-email-btn" onclick="window.sendCustomEmail(this)" class="px-5 py-2.5 bg-[#6366f1] hover:bg-[#4f46e5] disabled:opacity-50 text-white font-bold rounded-lg transition-colors text-sm flex items-center gap-2 focus:outline-none cursor-pointer">
+                            <span class="material-symbols-outlined text-lg">send</span>
+                            <span id="send-custom-email-text">Send Email</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -542,6 +613,16 @@
         const seoError = document.getElementById('seo-error');
         const seoTable = document.getElementById('seo-table');
         const seoBody = document.getElementById('seo-body');
+
+        // Feedback & Support UI Elements
+        const tabFeedback = document.getElementById('tab-feedback');
+        const viewFeedback = document.getElementById('view-feedback');
+        const feedbackLoading = document.getElementById('feedback-loading');
+        const feedbackError = document.getElementById('feedback-error');
+        const feedbackTable = document.getElementById('feedback-table');
+        const feedbackBody = document.getElementById('feedback-body');
+        const feedbackPagination = document.getElementById('feedback-pagination');
+        const customEmailRecipient = document.getElementById('custom-email-recipient');
 
         let refreshState = 'idle';
 
@@ -703,39 +784,46 @@
             if (updateHash) {
                 window.location.hash = tabName;
             }
+            
+            const activeClass = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none";
+            const inactiveClass = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+            
+            tabOverview.className = inactiveClass;
+            tabReporting.className = inactiveClass;
+            tabSeo.className = inactiveClass;
+            tabFeedback.className = inactiveClass;
+            
+            viewOverview.classList.add('hidden');
+            viewReporting.classList.add('hidden');
+            viewSeo.classList.add('hidden');
+            viewFeedback.classList.add('hidden');
+            
             if (tabName === 'overview') {
-                tabOverview.className = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none";
-                tabReporting.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
-                tabSeo.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+                tabOverview.className = activeClass;
                 viewOverview.classList.remove('hidden');
-                viewReporting.classList.add('hidden');
-                viewSeo.classList.add('hidden');
             } else if (tabName === 'reporting') {
-                tabReporting.className = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none";
-                tabOverview.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
-                tabSeo.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
-                viewOverview.classList.add('hidden');
+                tabReporting.className = activeClass;
                 viewReporting.classList.remove('hidden');
-                viewSeo.classList.add('hidden');
                 fetchAndRenderReporting();
             } else if (tabName === 'seo') {
-                tabSeo.className = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none";
-                tabOverview.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
-                tabReporting.className = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
-                viewOverview.classList.add('hidden');
-                viewReporting.classList.add('hidden');
+                tabSeo.className = activeClass;
                 viewSeo.classList.remove('hidden');
                 fetchAndRenderSeoHistory();
+            } else if (tabName === 'feedback') {
+                tabFeedback.className = activeClass;
+                viewFeedback.classList.remove('hidden');
+                fetchAndRenderFeedback();
             }
         };
 
         tabOverview.addEventListener('click', () => switchTab('overview'));
         tabReporting.addEventListener('click', () => switchTab('reporting'));
         tabSeo.addEventListener('click', () => switchTab('seo'));
+        tabFeedback.addEventListener('click', () => switchTab('feedback'));
 
         window.addEventListener('hashchange', () => {
             const hash = window.location.hash.substring(1);
-            if (['overview', 'reporting', 'seo'].includes(hash)) {
+            if (['overview', 'reporting', 'seo', 'feedback'].includes(hash)) {
                 switchTab(hash, false);
             }
         });
@@ -1841,6 +1929,277 @@
             }
         });
 
+        // --- Feedback & Support Logic ---
+        let currentFeedbackPage = 1;
+        let feedbackDataStore = {};
+
+        const fetchAndRenderFeedback = async (page = 1) => {
+            currentFeedbackPage = page;
+            feedbackLoading.style.display = 'block';
+            feedbackTable.style.display = 'none';
+            feedbackError.style.display = 'none';
+            feedbackBody.innerHTML = '';
+            feedbackPagination.innerHTML = '';
+
+            try {
+                const data = await fetchData(`feedback?page=${page}&limit=${PER_PAGE}`);
+                feedbackLoading.style.display = 'none';
+
+                if (data && data.success && data.feedback) {
+                    feedbackTable.style.display = 'table';
+                    const feedback = data.feedback;
+                    feedbackDataStore = {};
+                    
+                    if (feedback.length === 0) {
+                        feedbackBody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-500 dark:text-gray-400">No feedback submitted yet.</td></tr>`;
+                    } else {
+                        feedback.forEach(item => {
+                            feedbackDataStore[item.id] = item;
+                            const row = document.createElement('tr');
+                            
+                            const dateStr = formatAdminDate(item.created_at);
+                            const typeBadge = item.feedback_type === 'Bug Report' 
+                                ? `<span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">Bug Report</span>`
+                                : `<span class="px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">Feature Request</span>`;
+                            
+                            const emailHtml = item.email 
+                                ? `<a href="mailto:${item.email}" class="text-indigo-600 dark:text-indigo-400 hover:underline">${escapeHtml(item.email)}</a>`
+                                : `<span class="text-gray-400 dark:text-gray-500 italic">Not provided</span>`;
+                            
+                            const detailsText = escapeHtml(item.details || '');
+                            
+                            const screenshotHtml = item.screenshot_url 
+                                ? `<a href="${item.screenshot_url}" target="_blank" class="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline">
+                                    <span class="material-symbols-outlined text-sm">image</span> View Image
+                                   </a>`
+                                : `<span class="text-gray-400 dark:text-gray-500 italic">None</span>`;
+                            
+                            const pageUrlHtml = item.page_url 
+                                ? `<a href="${item.page_url}" target="_blank" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 truncate max-w-xs block" title="${escapeHtml(item.page_url)}">${escapeHtml(item.page_url.replace(/^https?:\/\/[^\/]+/, ''))}</a>`
+                                : `<span class="text-gray-450 italic">N/A</span>`;
+
+                            const hasReplied = !!item.replied_at;
+                            const replyStatus = hasReplied
+                                ? `<button onclick="window.viewReplyClick(${item.id})" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-255 hover:bg-emerald-100 transition-colors flex items-center gap-1 cursor-pointer">
+                                    <span class="material-symbols-outlined text-xs">done</span> Replied
+                                   </button>`
+                                : `<span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">Pending</span>`;
+
+                            const actionButtons = `
+                                <div class="flex items-center justify-end gap-2">
+                                    ${item.email ? `
+                                        <button onclick="window.openReplyModal(${item.id}, '${escapeHtml(item.email)}', '${escapeHtml(item.feedback_type)}')" class="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors flex items-center justify-center cursor-pointer" title="Reply to Feedback">
+                                            <span class="material-symbols-outlined text-lg" style="font-size:18px;">reply</span>
+                                        </button>
+                                    ` : ''}
+                                    ${hasReplied ? `
+                                        <button onclick="window.viewReplyClick(${item.id})" class="text-gray-500 hover:text-gray-700 dark:text-gray-450 dark:hover:text-gray-300 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors flex items-center justify-center cursor-pointer" title="View Reply History">
+                                            <span class="material-symbols-outlined text-lg" style="font-size:18px;">history</span>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            `;
+
+                            row.className = 'hover:bg-gray-50 dark:hover:bg-gray-750/30 transition-colors';
+                            row.innerHTML = `
+                                <td class="px-6 py-4 whitespace-nowrap text-gray-500 dark:text-gray-400 text-xs">${dateStr}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">${typeBadge}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-xs">${emailHtml}</td>
+                                <td class="px-6 py-4 text-xs max-w-sm whitespace-pre-wrap">${detailsText}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center text-xs">${screenshotHtml}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-xs">${pageUrlHtml}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-xs">
+                                    <div class="flex items-center justify-end gap-3">
+                                        <div>${replyStatus}</div>
+                                        <div>${actionButtons}</div>
+                                    </div>
+                                </td>
+                            `;
+                            feedbackBody.appendChild(row);
+                        });
+                        
+                        renderPagination(data.pagination, feedbackPagination, fetchAndRenderFeedback);
+                    }
+                } else {
+                    throw new Error(data?.error || 'Failed to fetch feedback list.');
+                }
+            } catch (err) {
+                console.error("Fetch feedback error:", err);
+                feedbackLoading.style.display = 'none';
+                feedbackError.textContent = err.message || 'An error occurred while loading feedback.';
+                feedbackError.classList.remove('hidden');
+            }
+        };
+
+        // --- Reply Modal Logic ---
+        let pendingReplyFeedbackId = null;
+
+        window.openReplyModal = (feedbackId, email, feedbackType) => {
+            pendingReplyFeedbackId = feedbackId;
+            document.getElementById('reply-modal-subtitle').textContent = `Replying to user's ${feedbackType || 'Feedback'}`;
+            document.getElementById('reply-email-input').value = email;
+            document.getElementById('reply-subject-input').value = `Re: Your WhoIsBringing ${feedbackType || 'Feedback'}`;
+            document.getElementById('reply-message-input').value = '';
+            
+            document.getElementById('feedback-reply-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeReplyModal = () => {
+            pendingReplyFeedbackId = null;
+            document.getElementById('feedback-reply-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+
+        window.sendFeedbackReply = async () => {
+            const email = document.getElementById('reply-email-input').value.trim();
+            const subject = document.getElementById('reply-subject-input').value.trim();
+            const message = document.getElementById('reply-message-input').value.trim();
+
+            if (!email || !message) {
+                showToast('Email and message are required.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('send-reply-btn');
+            const spinner = document.getElementById('send-reply-spinner');
+            const text = document.getElementById('send-reply-text');
+
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            text.textContent = 'Sending...';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/feedback/reply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Auth': ADMIN_AUTH
+                    },
+                    body: JSON.stringify({
+                        feedbackId: pendingReplyFeedbackId,
+                        email,
+                        feedbackType: feedbackDataStore[pendingReplyFeedbackId]?.feedback_type || '',
+                        subject,
+                        message
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to send reply');
+
+                showToast('Reply sent successfully!', 'success');
+                window.closeReplyModal();
+                fetchAndRenderFeedback(currentFeedbackPage);
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+                text.textContent = 'Send Reply';
+            }
+        };
+
+        // --- Sent Replies History Viewer ---
+        window.viewReplyClick = async (feedbackId) => {
+            const item = feedbackDataStore[feedbackId];
+            const email = item ? item.email : 'Not provided';
+            
+            document.getElementById('view-reply-modal-subtitle').textContent = `Reply history`;
+            document.getElementById('view-reply-email').textContent = email;
+            
+            const contentBox = document.getElementById('view-reply-content');
+            contentBox.innerHTML = `
+                <div class="flex items-center justify-center p-8 text-gray-500 dark:text-gray-400">
+                    <span class="animate-spin w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full mr-2"></span>
+                    <span>Loading replies...</span>
+                </div>
+            `;
+
+            document.getElementById('view-reply-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/feedback/replies?feedback_id=${feedbackId}`, {
+                    headers: { 'X-Admin-Auth': ADMIN_AUTH }
+                });
+                const data = await res.json();
+                
+                if (data && data.success && data.replies && data.replies.length > 0) {
+                    contentBox.innerHTML = '';
+                    contentBox.className = "w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 divide-y divide-gray-150 dark:divide-gray-800 max-h-60 overflow-y-auto p-0";
+                    
+                    data.replies.forEach((reply, idx) => {
+                        const replyDate = formatAdminDate(reply.replied_at);
+                        const replyItem = document.createElement('div');
+                        replyItem.className = 'p-4 hover:bg-gray-100/50 dark:hover:bg-gray-800/30 transition';
+                        replyItem.innerHTML = `
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-300">Reply #${data.replies.length - idx}</span>
+                                <span class="text-xs text-gray-400 dark:text-gray-500">${replyDate}</span>
+                            </div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400 space-y-0.5">
+                                <div><span class="font-medium">Subject:</span> <span class="text-gray-700 dark:text-gray-300">${reply.subject || 'N/A'}</span></div>
+                            </div>
+                            <div class="text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap mt-2.5 font-normal">${reply.reply_message}</div>
+                        `;
+                        contentBox.appendChild(replyItem);
+                    });
+                } else {
+                    contentBox.innerHTML = `<div class="text-center p-8 text-gray-500 dark:text-gray-400">No sent replies found in history.</div>`;
+                }
+            } catch (err) {
+                contentBox.innerHTML = `<div class="text-red-500 text-center p-8">Failed to fetch reply history.</div>`;
+            }
+        };
+
+        window.closeViewReplyModal = () => {
+            document.getElementById('view-reply-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        };
+
+        // --- Custom Support Email dispatch ---
+        window.sendCustomEmail = async (btn) => {
+            const email = customEmailRecipient.value.trim();
+            const subject = document.getElementById('custom-email-subject').value.trim();
+            const message = document.getElementById('custom-email-message').value.trim();
+
+            if (!email || !message) {
+                showToast('Recipient email and message are required.', 'error');
+                return;
+            }
+
+            const text = document.getElementById('send-custom-email-text');
+            const originalText = text.textContent;
+
+            btn.disabled = true;
+            text.innerHTML = `<span class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin inline-block mr-1"></span> Sending...`;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/admin/email/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Admin-Auth': ADMIN_AUTH
+                    },
+                    body: JSON.stringify({ email, subject, message })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Failed to send custom email.');
+
+                showToast('Custom support email sent successfully!', 'success');
+                customEmailRecipient.value = '';
+                document.getElementById('custom-email-subject').value = '';
+                document.getElementById('custom-email-message').value = '';
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                text.textContent = originalText;
+            }
+        };
+
         const refreshAllData = async (isManualRefresh = false) => {
             if (isManualRefresh) {
                 if (refreshState === 'loading') return;
@@ -1857,6 +2216,9 @@
                 }
                 if (isManualRefresh && activeTab === 'seo') {
                     fetches.push(fetchAndRenderSeoHistory());
+                }
+                if (isManualRefresh && activeTab === 'feedback') {
+                    fetches.push(fetchAndRenderFeedback());
                 }
                 await Promise.all(fetches);
                 if (isManualRefresh) setRefreshState('success');
@@ -1876,6 +2238,8 @@
             switchTab('reporting', false);
         } else if (initialHash === 'seo') {
             switchTab('seo', false);
+        } else if (initialHash === 'feedback') {
+            switchTab('feedback', false);
         } else {
             switchTab('overview', false);
         }
@@ -2060,6 +2424,69 @@
                     <span id="delete-seo-spinner" class="hidden animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
                     <span id="delete-seo-text">Delete</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Reply Modal -->
+    <div id="feedback-reply-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">Reply to Feedback</h3>
+                    <p id="reply-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="window.closeReplyModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none cursor-pointer">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label for="reply-email-input" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">To</label>
+                    <input type="email" id="reply-email-input" disabled class="w-full px-3 py-2 border border-gray-300 dark:border-gray-650 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-semibold cursor-not-allowed focus:outline-none">
+                </div>
+                <div>
+                    <label for="reply-subject-input" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Subject</label>
+                    <input type="text" id="reply-subject-input" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none transition-all">
+                </div>
+                <div>
+                    <label for="reply-message-input" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Message</label>
+                    <textarea id="reply-message-input" rows="5" placeholder="Write your support response here..." class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none transition-all font-sans"></textarea>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+                <button onclick="window.closeReplyModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors text-sm font-semibold cursor-pointer">Cancel</button>
+                <button id="send-reply-btn" onclick="window.sendFeedbackReply()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors text-sm font-semibold shadow-md flex items-center gap-1.5 focus:outline-none cursor-pointer">
+                    <span id="send-reply-spinner" class="hidden animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+                    <span id="send-reply-text">Send Reply</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Sent Replies Modal -->
+    <div id="view-reply-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">Sent Reply History</h3>
+                    <p id="view-reply-modal-subtitle" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                </div>
+                <button onclick="window.closeViewReplyModal()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none cursor-pointer">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="text-sm text-gray-600 dark:text-gray-400">
+                    User: <strong id="view-reply-email" class="text-gray-800 dark:text-gray-200"></strong>
+                </div>
+                <!-- Sent replies container -->
+                <div id="view-reply-content" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 divide-y divide-gray-150 dark:divide-gray-850 max-h-60 overflow-y-auto p-4">
+                    <!-- Loaded dynamically -->
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+                <button onclick="window.closeViewReplyModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-lg transition-colors text-sm font-semibold cursor-pointer">Close</button>
             </div>
         </div>
     </div>
