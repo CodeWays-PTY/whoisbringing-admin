@@ -515,7 +515,42 @@
                             <tbody id="seo-body" class="divide-y divide-gray-200 dark:divide-gray-700"></tbody>
                         </table>
                     </div>
+                    <!-- Pagination container -->
+                    <div id="seo-pagination" class="flex justify-between items-center p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50"></div>
                 </div>
+            </div>
+
+            <!-- Copywriting Prompt Section (Read-only) -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow border border-gray-200 dark:border-gray-700 space-y-4">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#6366f1]">info</span>
+                    Active Copywriting & AI Instructions
+                </h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    This is the prompt and behavioral set used by Gemini AI during content generation. It guides the structure, tone, and brand positioning of all generated articles.
+                </p>
+                <div class="bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-750 p-4 rounded-xl font-mono text-xs text-gray-600 dark:text-gray-300 overflow-x-auto whitespace-pre-wrap max-h-80 leading-relaxed" style="word-break: break-all;">You are a professional SEO copywriter and direct response strategist for WhoIsBringing.com.
+Your task is to write the main body content of an SEO-optimized article.
+
+Brand Guidelines:
+1. Tone: Motivating, welcoming, practical, and clear. Speak to host frustrations.
+2. PAS Framework:
+   - NO FLUFF: Avoid "In today's fast-paced world..." or "Planning an event can be a task...". Start directly with the host's real pain: the stress of coordinating who is bringing what (people bringing duplicate potato salad, forgetting ice, or text chats getting lost).
+   - THE HOOK (Problem): Open in the first sentence with the frustrating confusion of planning items for an event with friends.
+   - THE AGITATION: Explain why spreadsheets get ignored, text group chats lead to chaos, and hosts end up paying for everything.
+   - THE SOLUTION: Introduce WhoIsBringing.com as the exact cure. Walk through the simple steps to coordinate in real-time. Make sure to mention the new AI Import feature where hosts can simply upload a photo of a handwritten list, a WhatsApp text screenshot, or an Excel/CSV document to generate their digital checklist instantly with Gemini AI.
+   - NO CTA: Do NOT write any Call to Action button or link at the end. Focus solely on the content. The CTA is automatically appended.
+3. Spelling: US English.
+
+HTML Guidelines:
+- Do NOT generate &lt;html&gt;, &lt;head&gt;, &lt;body&gt;, &lt;header&gt;, or &lt;footer&gt; tags.
+- Do NOT generate the main article title (&lt;h1&gt;).
+- Generate only the inner article HTML content using clean semantic HTML tags.
+- Use Tailwind CSS utility classes:
+  - Headings: &lt;h2&gt;, &lt;h3&gt; with appropriate margins, sizes, font-bold, text-slate-800.
+  - Paragraphs: &lt;p&gt; with text-sm text-slate-650 leading-relaxed mb-4.
+  - Lists: &lt;ul&gt;/&lt;li&gt; with list-disc, pl-5, space-y-2, mb-6.
+- Write between 600 and 800 words. Make it specific, practical, and highly optimized for search rankings.</div>
             </div>
         </div>
 
@@ -625,6 +660,7 @@
         const seoError = document.getElementById('seo-error');
         const seoTable = document.getElementById('seo-table');
         const seoBody = document.getElementById('seo-body');
+        const seoPagination = document.getElementById('seo-pagination');
 
         // Feedback & Support UI Elements
         const tabFeedback = document.getElementById('tab-feedback');
@@ -1617,14 +1653,15 @@
         };
 
         // --- SEO Centre Logic ---
-        const fetchAndRenderSeoHistory = async () => {
+        const fetchAndRenderSeoHistory = async (page = 1) => {
             const reqId = ++seoRequestId;
             seoLoading.style.display = 'block';
             seoTable.style.display = 'none';
             seoError.style.display = 'none';
             seoBody.innerHTML = '';
+            seoPagination.innerHTML = '';
 
-            const data = await fetchPublic('/api/seo/articles');
+            const data = await fetchPublic(`/api/seo/articles?page=${page}&limit=5`);
             if (reqId !== seoRequestId) return;
 
             seoLoading.style.display = 'none';
@@ -1678,6 +1715,10 @@
                         `;
                         seoBody.appendChild(row);
                     });
+
+                    if (data.pagination) {
+                        renderPagination(seoPagination, data.pagination, fetchAndRenderSeoHistory);
+                    }
                 }
             } else {
                 seoError.textContent = data.error || 'Failed to load SEO articles.';
