@@ -1580,6 +1580,10 @@
                 if (seoEditModal && !seoEditModal.classList.contains('hidden')) closeSeoEditModalFunc();
                 const seoDeleteModal = document.getElementById('seo-delete-modal');
                 if (seoDeleteModal && !seoDeleteModal.classList.contains('hidden')) closeSeoDeleteModalFunc();
+                const feedbackReplyModal = document.getElementById('feedback-reply-modal');
+                if (feedbackReplyModal && !feedbackReplyModal.classList.contains('hidden')) window.closeReplyModal();
+                const viewReplyModal = document.getElementById('view-reply-modal');
+                if (viewReplyModal && !viewReplyModal.classList.contains('hidden')) window.closeViewReplyModal();
             }
         });
 
@@ -2091,6 +2095,11 @@
             document.body.style.overflow = '';
         };
 
+        const feedbackReplyModal = document.getElementById('feedback-reply-modal');
+        feedbackReplyModal.addEventListener('click', (e) => {
+            if (e.target === feedbackReplyModal) window.closeReplyModal();
+        });
+
         window.sendFeedbackReply = async () => {
             const email = document.getElementById('reply-email-input').value.trim();
             const subject = document.getElementById('reply-subject-input').value.trim();
@@ -2197,6 +2206,11 @@
             document.getElementById('view-reply-modal').classList.add('hidden');
             document.body.style.overflow = '';
         };
+
+        const viewReplyModal = document.getElementById('view-reply-modal');
+        viewReplyModal.addEventListener('click', (e) => {
+            if (e.target === viewReplyModal) window.closeViewReplyModal();
+        });
 
         // --- Custom Support Email dispatch ---
         window.sendCustomEmail = async (btn) => {
