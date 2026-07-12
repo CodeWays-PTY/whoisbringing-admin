@@ -2242,7 +2242,7 @@ HTML Guidelines:
                 
                 if (data && data.success && data.replies && data.replies.length > 0) {
                     contentBox.innerHTML = '';
-                    contentBox.className = "w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 divide-y divide-gray-150 dark:divide-gray-800 max-h-60 overflow-y-auto p-0";
+                    contentBox.className = "w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-800 dark:text-gray-200 divide-y divide-gray-200 dark:divide-gray-800 max-h-60 overflow-y-auto p-0";
                     
                     data.replies.forEach((reply, idx) => {
                         const replyDate = formatAdminDate(reply.replied_at);
@@ -2347,7 +2347,7 @@ HTML Guidelines:
 
                 const emails = data.emails || [];
                 if (emails.length === 0) {
-                    listContainer.innerHTML = `<div class="text-center py-6 text-xs text-gray-550 dark:text-gray-400">No custom support emails sent yet.</div>`;
+                    listContainer.innerHTML = `<div class="text-center py-6 text-xs text-gray-500 dark:text-gray-400">No custom support emails sent yet.</div>`;
                     return;
                 }
 
@@ -2361,16 +2361,14 @@ HTML Guidelines:
                             <span class="font-bold text-indigo-500 uppercase tracking-wider text-[9px]">Custom Support</span>
                         </div>
                         <div>
-                            <span class="text-gray-550 dark:text-gray-400">To:</span>
-                            <strong class="text-gray-800 dark:text-gray-250 font-semibold">${escapeHtml(email.recipient_email)}</strong>
+                            <span class="text-gray-500 dark:text-gray-400">To:</span>
+                            <strong class="text-gray-800 dark:text-gray-200 font-semibold">${escapeHtml(email.recipient_email)}</strong>
                         </div>
                         <div>
-                            <span class="text-gray-550 dark:text-gray-400">Subject:</span>
-                            <strong class="text-gray-800 dark:text-gray-250 font-semibold">${escapeHtml(email.subject || 'N/A')}</strong>
+                            <span class="text-gray-500 dark:text-gray-400">Subject:</span>
+                            <strong class="text-gray-800 dark:text-gray-200 font-semibold">${escapeHtml(email.subject || 'N/A')}</strong>
                         </div>
-                        <div class="bg-white dark:bg-gray-800 border border-gray-150 dark:border-gray-700 p-3 rounded-lg text-gray-700 dark:text-gray-305 font-sans whitespace-pre-wrap leading-relaxed">
-                            ${escapeHtml(email.reply_message)}
-                        </div>
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-3 rounded-lg text-gray-700 dark:text-gray-300 font-sans whitespace-pre-wrap leading-relaxed">${escapeHtml(email.reply_message)}</div>
                     `;
                     listContainer.appendChild(item);
                 });
