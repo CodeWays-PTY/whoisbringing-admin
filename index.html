@@ -210,20 +210,20 @@
         </div>
 
         <!-- Navigation Tabs -->
-        <div class="flex border-b border-gray-200 dark:border-gray-700 mb-8 gap-6 text-sm font-medium">
-            <button id="tab-overview" class="pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none">
+        <div class="flex border-b border-gray-200 dark:border-gray-700 mb-8 gap-6 text-sm font-medium overflow-x-auto whitespace-nowrap pb-px scrollbar-none">
+            <button id="tab-overview" class="pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none flex-shrink-0">
                 <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">dashboard</span>
                 Overview
             </button>
-            <button id="tab-reporting" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none">
+            <button id="tab-reporting" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none flex-shrink-0">
                 <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">analytics</span>
                 Reporting & KPIs
             </button>
-            <button id="tab-seo" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none">
+            <button id="tab-seo" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none flex-shrink-0">
                 <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">search</span>
                 SEO Centre
             </button>
-            <button id="tab-feedback" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none">
+            <button id="tab-feedback" class="pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none flex-shrink-0">
                 <span class="material-symbols-outlined" style="font-size: 18px; line-height: 1;">chat_bubble</span>
                 Feedback & Support
             </button>
@@ -844,8 +844,8 @@ HTML Guidelines:
                 window.location.hash = tabName;
             }
             
-            const activeClass = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none";
-            const inactiveClass = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none";
+            const activeClass = "pb-3 border-b-2 border-[#6366f1] text-gray-800 dark:text-gray-100 flex items-center gap-2 transition-all focus:outline-none flex-shrink-0";
+            const inactiveClass = "pb-3 border-b-2 border-transparent text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex items-center gap-2 transition-all focus:outline-none flex-shrink-0";
             
             tabOverview.className = inactiveClass;
             tabReporting.className = inactiveClass;
